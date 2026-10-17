@@ -218,7 +218,35 @@ INARA_DATA.STICKERS.forEach(function (stk) {
   var seqStk = INARA_AUDIO.getLastSequence();
   assert(seqStk.length > 0 && seqStk[0].type === "file", "Sticker " + stk.id + " must queue offline audio file");
 });
-print("   -> OK: Offline Audio Engine verified for words, multi-char targets, and all " + INARA_DATA.STICKERS.length + " stickers (including Sheriff Labrador & Police Badge).");
+
+// Verify composite non-clobbering stage audio sequences
+INARA_AUDIO.speakStageCut(INARA_DATA.getWordByString("APEL"));
+var seqCut = INARA_AUDIO.getLastSequence();
+assert(
+  seqCut.some(function (x) { return x.path === "assets/audio/id/stage_cut.m4a"; }) &&
+  seqCut.some(function (x) { return x.path === "assets/audio/id/word_apel.m4a"; }),
+  "speakStageCut must queue stage_cut and word in single sequence"
+);
+
+INARA_AUDIO.speakLabradorArrival(INARA_DATA.getWordByString("TOMAT"));
+var seqArr = INARA_AUDIO.getLastSequence();
+assert(
+  seqArr.some(function (x) { return x.path === "assets/audio/id/greet_labrador.m4a"; }) &&
+  seqArr.some(function (x) { return x.path === "assets/audio/id/stage_cut.m4a"; }) &&
+  seqArr.some(function (x) { return x.path === "assets/audio/id/word_tomat.m4a"; }),
+  "speakLabradorArrival must queue siren/greet, stage_cut and word in single sequence"
+);
+
+INARA_AUDIO.speakStageCount(25, { echoEn: true });
+var seqCount = INARA_AUDIO.getLastSequence();
+assert(
+  seqCount.some(function (x) { return x.path === "assets/audio/id/stage_count_tens.m4a"; }) &&
+  seqCount.some(function (x) { return x.path === "assets/audio/id/num_25.m4a"; }) &&
+  seqCount.some(function (x) { return x.path === "assets/audio/en/num_25.m4a"; }),
+  "speakStageCount(25) must queue stage_count_tens and bilingual numbers"
+);
+
+print("   -> OK: Offline Audio Engine & Composite Sequences verified for words, multi-char targets, and all " + INARA_DATA.STICKERS.length + " stickers (including Sheriff Labrador & Police Badge).");
 
 print("4. Testing Full 5-Stage Cooking Loop (Stage 1 -> 2A -> 2B -> 3 -> 4 -> 5) across Worlds 1..5...");
 INARA_APP.init();
@@ -373,7 +401,65 @@ for (var r = 0; r < 3; r++) {
 INARA_APP.afterDishNextAction("again");
 flushTimers();
 assert(appElement.innerHTML.indexOf("Dapur Ceria Inara Sudah Mengantuk") !== -1, "Sleepy Kitchen overlay triggered after 3 recipes!");
-INARA_APP.wakeKitchenParent();
 print("   -> OK: Sleepy Kitchen Screen-Time Gate & Wake Up verified.");
+
+print("7. Testing Sheriff Labrador Special Guest Visit, Patrol Car Arrival, and Police Badge Award...");
+// Reset sleepy timer for clean run
+INARA_APP.updateSetting("sleepTimerMode", "unlimited");
+INARA_APP.startCookingOrder(1, null, "labrador");
+flushTimers();
+
+assert(appElement.innerHTML.indexOf("Sheriff Labrador") !== -1, "Order must have Sheriff Labrador as customer");
+assert(appElement.innerHTML.indexOf("patrol-car-svg") !== -1, "Stage 1 must render Patrol Car SVG for Labrador arrival");
+assert(appElement.innerHTML.indexOf("bouncing-hand-icon") !== -1, "Stage 1 must render visual bouncing hand cue");
+
+// Advance Stage 1 (cut board)
+for (var cutStep = 0; cutStep < 12; cutStep++) {
+  if (appElement.innerHTML.indexOf("Potong Suku Kata") !== -1) {
+    INARA_APP.handleSliceIngredient();
+    flushTimers();
+  }
+}
+
+// Stage 2A (Count)
+assert(appElement.innerHTML.indexOf("Takaran Digital") !== -1, "Must reach Stage 2A for Labrador");
+for (var uL = 0; uL < 10; uL++) {
+  INARA_APP.handleAddUnitItem();
+}
+flushTimers();
+
+// Stage 3 (Bubble)
+var alphaL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+for (var stepL = 0; stepL < 12; stepL++) {
+  for (var cL = 0; cL < alphaL.length; cL++) {
+    if (appElement.innerHTML.indexOf("Lukis Saus:") === -1) {
+      INARA_APP.handleBubbleTap(alphaL[cL]);
+      flushTimers();
+    }
+  }
+}
+
+// Stage 4 (Trace)
+assert(appElement.innerHTML.indexOf("Lukis Saus:") !== -1, "Must reach Stage 4 Tracing for Labrador");
+INARA_APP.handleAutoMagicTrace(true);
+flushTimers();
+
+// Stage 5 (Feeding Labrador)
+assert(appElement.innerHTML.indexOf("Suapi Sheriff Labrador") !== -1, "Must reach Stage 5 Feeding for Sheriff Labrador");
+INARA_APP.handleFeedCustomerBite();
+INARA_APP.handleFeedCustomerBite();
+INARA_APP.handleFeedCustomerBite();
+flushTimers();
+
+// Verify Police Badge Award
+assert(appElement.innerHTML.indexOf("police-badge-award-card") !== -1, "Stage 5 must render police-badge-award-card");
+assert(appElement.innerHTML.indexOf("police-badge-svg") !== -1, "Stage 5 must render official Police Badge SVG");
+assert(appElement.innerHTML.indexOf("Lencana Patroli Polisi") !== -1, "Stage 5 must show Lencana Patroli Polisi");
+assert(appElement.innerHTML.indexOf("Stiker Sheriff Labrador Buka!") !== -1, "Stage 5 must announce Sheriff Labrador sticker unlocked");
+
+var savedState = JSON.parse(localStorage.getItem("inara_game_state_v1"));
+assert(savedState.unlockedStickers.indexOf("stk_police_badge") !== -1, "stk_police_badge must be saved in unlockedStickers");
+assert(savedState.unlockedStickers.indexOf("stk_labrador") !== -1, "stk_labrador must be saved in unlockedStickers");
+print("   -> OK: Sheriff Labrador Arrival, Patrol Car, Feeding, and Official Police Badge Award verified 100%.");
 
 print("ALL DEEP END-TO-END TESTS PASSED!");

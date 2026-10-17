@@ -140,10 +140,6 @@ def build_audio_tasks():
         "great_job": "Hebat sekali Koki Inara! Bintang untuk Inara!",
         "hundred_party": "Seratus! Wah, Koki Inara sudah pintar berhitung sampai seratus!",
         "sleepy_kitchen": "Wah, dapurnya sudah mengantuk, Inara sayang. Besok kita masak lagi ya bersama Abi dan Umi! Selamat istirahat!",
-        "word_inara": "I, NA, RA. Inara!",
-        "word_abi": "A, BI. Abi!",
-        "word_umi": "U, MI. Umi!",
-        "word_sayang": "SA, YANG. Sayang!",
         "basket_ten": "Sepuluh!",
     }
     for key, text in id_phrases.items():

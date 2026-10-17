@@ -243,14 +243,26 @@ window.INARA_APP = (function () {
     return [String(base), String(base + 1), String(base + 2), String(base + 3)];
   }
 
-  function startCookingOrder(worldLevel, menuId = null) {
+  function startCookingOrder(worldLevel, menuId = null, forcedCustomerId = null) {
     const worldObj = DATA.WORLDS.find((w) => w.level === worldLevel) || DATA.WORLDS[0];
-    const menuObj = menuId
-      ? worldObj.menus.find((m) => m.id === menuId) || pickRandom(worldObj.menus)
-      : pickRandom(worldObj.menus);
 
-    // Pick customer (rotate between Abi, Umi, Mochi, Bobo, Kuma)
-    const customerObj = pickRandom(DATA.CUSTOMERS);
+    // Pick customer (rotate between Abi, Umi, Mochi, Bobo, Kuma, or invite Sheriff Labrador)
+    const customerObj = forcedCustomerId
+      ? DATA.CUSTOMERS.find((c) => c.id === forcedCustomerId) || pickRandom(DATA.CUSTOMERS)
+      : pickRandom(DATA.CUSTOMERS);
+
+    // Pick menu: if Labrador and no menu specified, choose a healthy dish
+    let menuObj;
+    if (menuId) {
+      menuObj = worldObj.menus.find((m) => m.id === menuId) || pickRandom(worldObj.menus);
+    } else if (customerObj.id === "labrador") {
+      const healthyMenus = worldObj.menus.filter((m) =>
+        ["salad_buah", "sup_tomat", "sayur_bayam", "ikan_bakar", "tumis_brokoli", "sup_wortel", "jus_jeruk"].includes(m.id)
+      );
+      menuObj = healthyMenus.length > 0 ? pickRandom(healthyMenus) : pickRandom(worldObj.menus);
+    } else {
+      menuObj = pickRandom(worldObj.menus);
+    }
 
     // Pick 2 syllable words for Stage 1 (Cutting Board):
     // Word 1: Main ingredient from the dish
@@ -319,6 +331,7 @@ window.INARA_APP = (function () {
       baseSpellWord: spellTarget,
       numSeqItems,
       spellIndex: 0,
+      numSeqMissingIdx: 2,
       bubbleOptions: [],
       bubbleCompleted: false,
       // Stage 4 state (Tracing)
@@ -342,7 +355,7 @@ window.INARA_APP = (function () {
   function prepareBubbleOptions() {
     if (!activeOrder) return;
     if (activeOrder.bubbleMode === "numseq") {
-      const targetItem = activeOrder.numSeqItems[activeOrder.spellIndex] || "1";
+      const targetItem = activeOrder.numSeqItems[activeOrder.numSeqMissingIdx || 2] || "1";
       const targetNum = parseInt(targetItem, 10) || 1;
       const decoys = [];
       const offsets = [1, -1, 2, -2, 10, -10, 3, 5];
@@ -381,26 +394,17 @@ window.INARA_APP = (function () {
 
   function announceCurrentStage() {
     if (!activeOrder) return;
-    const orderUid = activeOrder.uid;
     const s = activeOrder.stageIndex;
     if (s === 0) {
       const w = activeOrder.cutWords[activeOrder.currentCutWordIdx];
       if (activeOrder.customer.id === "labrador" && activeOrder.currentCutWordIdx === 0 && !activeOrder.labradorGreeted) {
         activeOrder.labradorGreeted = true;
-        AUDIO.speakCustomerGreeting("labrador");
+        AUDIO.speakLabradorArrival(w);
       } else {
-        AUDIO.speakPhrase("stage_cut");
-        if (w) {
-          AUDIO.speakWord(w, false);
-        }
+        AUDIO.speakStageCut(w);
       }
     } else if (s === 1) {
-      if (activeOrder.targetNumber > 10) {
-        AUDIO.speakPhrase("stage_count_tens");
-      } else {
-        AUDIO.speakPhrase("stage_count");
-      }
-      AUDIO.speakNumber(activeOrder.targetNumber, getEchoOpts(activeOrder.world.isJapaneseWorld));
+      AUDIO.speakStageCount(activeOrder.targetNumber, getEchoOpts(activeOrder.world.isJapaneseWorld));
     } else if (s === 2) {
       const mp = activeOrder.mathProblem;
       if (mp.op === "+") {
@@ -410,22 +414,16 @@ window.INARA_APP = (function () {
         AUDIO.speakPhrase("stage_math_sub");
       }
     } else if (s === 3) {
-      AUDIO.speakPhrase("stage_bubble");
       const targetChar =
         activeOrder.bubbleMode === "numseq"
-          ? activeOrder.numSeqItems[activeOrder.spellIndex]
+          ? activeOrder.numSeqItems[activeOrder.numSeqMissingIdx || 2]
           : activeOrder.spellWord[activeOrder.spellIndex];
-      if (targetChar) AUDIO.speakLetter(targetChar);
+      AUDIO.speakStageBubble(targetChar);
     } else if (s === 4) {
-      AUDIO.speakPhrase("stage_trace");
-      AUDIO.speakLetter(activeOrder.traceTarget, getEchoOpts(activeOrder.world.isJapaneseWorld));
+      AUDIO.speakStageTrace(activeOrder.traceTarget, getEchoOpts(activeOrder.world.isJapaneseWorld));
     } else if (s === 5) {
       AUDIO.playFanfare();
-      if (activeOrder.customer.id === "labrador") {
-        AUDIO.speakCustomerPraise("labrador");
-      } else {
-        AUDIO.speakPhrase("stage_eat");
-      }
+      AUDIO.speakPhrase("stage_eat");
     }
   }
 
@@ -1020,15 +1018,24 @@ window.INARA_APP = (function () {
             <div onclick="INARA_AUDIO.speakPhrase('welcome')" style="cursor:pointer;">
               ${SVG.renderChefInara(state.wardrobe, "cheering", 108)}
             </div>
-            <div class="speech-bubble-hero">
-              <h1>Halo Koki Cilik Inara! 🌟</h1>
-              <p>Pilih salah satu dari <strong>5 Kedai Masakan (25 Menu)</strong> di bawah, atau tekan tombol hijau untuk langsung memasak bersama Abi & Umi!</p>
+            <div class="speech-bubble-hero" onclick="INARA_AUDIO.speakPhrase('welcome')" style="cursor:pointer;" title="Sentuh untuk panduan suara">
+              <h1 style="font-size:1.35rem;font-weight:900;color:var(--text-dark);margin:0;">Chef Ceria Inara! 🌟</h1>
+              <div style="display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:900;color:var(--pink-dark);margin-top:4px;">
+                <span class="speaker-wave-icon">🔊</span>
+                <span>Sentuh Kedai & Ayo Masak!</span>
+                <span class="bouncing-hand-icon" style="font-size:1.3rem;">👇</span>
+              </div>
             </div>
           </div>
-          <div class="hero-actions">
+          <div class="hero-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="btn-jumbo-cta" onclick="INARA_APP.quickPlaySurprise()">
               <span>🍳</span>
-              <span>Masak Pesanan Kejutan!</span>
+              <span>Pesanan Kejutan!</span>
+            </button>
+            <button class="btn-jumbo-cta" style="background:linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);box-shadow:0 6px 0 #1E3A8A;"
+                    onclick="INARA_APP.startCookingOrder(1, null, 'labrador')">
+              <span>🚓</span>
+              <span>Sheriff Labrador!</span>
             </button>
           </div>
         </div>
@@ -1081,15 +1088,22 @@ window.INARA_APP = (function () {
               <h2 style="font-size:1.35rem;font-weight:900;color:${worldObj.themeColor};">
                 Kedai Level ${worldObj.level}: ${worldObj.name}
               </h2>
-              <p style="font-size:0.92rem;font-weight:800;color:var(--text-muted);">
-                ${worldObj.subtitle} — Pilih menu masakan untuk ${cust.name}!
-              </p>
+              <div style="font-size:0.92rem;font-weight:800;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                <span>${worldObj.subtitle}</span>
+                <span>• Masak untuk ${cust.name}!</span>
+              </div>
             </div>
           </div>
-          <button class="btn-jumbo-cta" style="min-height:58px;font-size:1rem;padding:8px 18px;"
-                  onclick="INARA_APP.startCookingOrder(${worldObj.level})">
-            🎲 Pesanan Acak di Kedai Ini!
-          </button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-jumbo-cta" style="min-height:54px;font-size:0.95rem;padding:6px 14px;"
+                    onclick="INARA_APP.startCookingOrder(${worldObj.level})">
+              🎲 Pesanan Acak
+            </button>
+            <button class="btn-jumbo-cta" style="min-height:54px;font-size:0.95rem;padding:6px 14px;background:linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);box-shadow:0 6px 0 #1E3A8A;"
+                    onclick="INARA_APP.startCookingOrder(${worldObj.level}, null, 'labrador')">
+              🚨 Panggil Sheriff Labrador! 🚓
+            </button>
+          </div>
         </div>
 
         <div class="menus-5-grid">
@@ -1330,7 +1344,8 @@ window.INARA_APP = (function () {
               ${
                 showCutLine
                   ? `<div class="cut-line-indicator" title="Ketuk untuk memotong!">
-                       <span style="font-size:2.3rem;">🔪</span>
+                       <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
+                       <span style="font-size:2.2rem;">🔪</span>
                        <span style="font-size:0.78rem;font-weight:900;color:#E11D48;">POTONG!</span>
                      </div>`
                   : ""
@@ -1411,8 +1426,9 @@ window.INARA_APP = (function () {
         <div class="cooking-pot-zone" onclick="${needMoreTens ? "INARA_APP.handleAddTensBasket()" : "INARA_APP.handleAddUnitItem()"}">
           ${
             currentTotal === 0
-              ? `<div style="color:#64748B;font-size:1.1rem;font-weight:800;">
-                   🍲 Panci masih kosong (0). Ketuk tombol di bawah untuk memasukkan ${ing.emoji} ${ing.word}!
+              ? `<div style="text-align:center;padding:12px;">
+                   <div style="font-size:3.5rem;" class="floating-item-icon">🍲</div>
+                   <div style="font-size:1.25rem;font-weight:900;color:#64748B;">👇 Masukkan ${ing.emoji} ${ing.word}!</div>
                  </div>`
               : ""
           }
@@ -1442,6 +1458,7 @@ window.INARA_APP = (function () {
                      <div>+10 Keranjang Puluhan</div>
                      <div style="font-size:0.85rem;opacity:0.9;">(${activeOrder.currentTens}/${info.tensCount} Keranjang = ${activeOrder.currentTens * 10})</div>
                    </div>
+                   ${needMoreTens ? `<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>` : ""}
                  </button>`
               : ""
           }
@@ -1456,6 +1473,7 @@ window.INARA_APP = (function () {
                 (${activeOrder.currentUnits}/${isSingleMode ? target : info.unitsCount} Satuan)
               </div>
             </div>
+            ${!needMoreTens && needMoreUnits ? `<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>` : ""}
           </button>
         </div>
       </div>
@@ -1623,8 +1641,10 @@ window.INARA_APP = (function () {
               .join("")}
           </div>
 
-          <div style="font-size:1.05rem;font-weight:900;color:var(--pink-dark);">
-            🫧 Ketuk gelembung angka berwarna emas <strong>"${targetNumStr}"</strong> untuk melengkapi urutan!
+          <div style="font-size:1.1rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:10px;">
+            <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
+            <span>Ketuk gelembung emas:</span>
+            <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 16px;color:#B45309;font-size:1.45rem;">${targetNumStr}</span>
           </div>
         </div>
       `;
@@ -1673,8 +1693,10 @@ window.INARA_APP = (function () {
             .join("")}
         </div>
 
-        <div style="font-size:1.05rem;font-weight:900;color:var(--pink-dark);">
-          🫧 Ketuk gelembung huruf berwarna emas <strong>"${targetChar}"</strong>!
+        <div style="font-size:1.1rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:10px;">
+          <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
+          <span>Ketuk gelembung huruf:</span>
+          <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 16px;color:#B45309;font-size:1.45rem;">${targetChar}</span>
         </div>
       </div>
     `;
@@ -1732,16 +1754,61 @@ window.INARA_APP = (function () {
         ${
           !doneEating
             ? `
-          <div style="font-size:1.3rem;font-weight:900;color:var(--pink-dark);">
-            🍽️ Ketuk masakan untuk menyuapi ${activeOrder.customer.name}! (${activeOrder.bitesTaken}/${activeOrder.totalBites})
+          <div style="font-size:1.3rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
+            <span>Suapi ${activeOrder.customer.name}! (${activeOrder.bitesTaken}/${activeOrder.totalBites})</span>
           </div>
           <div onclick="INARA_APP.handleFeedCustomerBite()"
                style="width:165px;height:165px;border-radius:50%;background:#FFF9DB;border:6px solid #F59E0B;display:flex;align-items:center;justify-content:center;font-size:5.5rem;cursor:pointer;transform:scale(${scale});transition:transform 0.25s ease;box-shadow:0 10px 25px rgba(245,158,11,0.28);">
             ${activeOrder.menu.emoji}
           </div>
           <button class="btn-jumbo-cta" onclick="INARA_APP.handleFeedCustomerBite()">
-            🥄 Suapi ${activeOrder.customer.name} ("Nyam Nyam!")
+            <span class="bouncing-hand-icon" style="font-size:1.5rem;">👆</span>
+            <span>Suapi ${activeOrder.customer.name} ("Nyam Nyam!")</span>
           </button>
+        `
+            : activeOrder.customer.id === "labrador"
+            ? `
+          <div class="police-badge-award-card" style="background:linear-gradient(180deg,#EFF6FF 0%,#DBEAFE 100%);border:5px solid #2563EB;border-radius:28px;padding:20px;text-align:center;box-shadow:0 12px 30px rgba(37,99,235,0.25);max-width:640px;margin:0 auto;">
+            <div style="font-size:2rem;font-weight:900;color:#1E3A8A;margin-bottom:8px;">⭐⭐⭐ +3 Bintang untuk Koki Inara!</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0;flex-wrap:wrap;">
+              <div onclick="INARA_AUDIO.playSparkle(); INARA_AUDIO.speakPhrase('labrador_badge')" style="cursor:pointer;" title="Lencana Patroli Polisi Inara">
+                ${SVG.renderPoliceBadge(125)}
+              </div>
+              <div style="text-align:left;max-width:340px;">
+                <div style="font-size:0.85rem;font-weight:900;color:#1D4ED8;letter-spacing:1px;">PENGHARGAAN SPESIAL POLISI</div>
+                <div style="font-size:1.4rem;font-weight:900;color:#1E3A8A;">Lencana Patroli Polisi</div>
+                <h2 style="font-size:1.15rem;color:#1E40AF;margin:6px 0;font-weight:800;">
+                  "${activeOrder.customer.praise}"
+                </h2>
+                <div style="font-size:0.92rem;font-weight:800;color:#2563EB;">Hadiah Sheriff Labrador untuk Chef Inara yang hebat! 🐕</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+              <div style="background:#FFFFFF;border:2px solid #60A5FA;border-radius:16px;padding:6px 14px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:1.8rem;">🐕</span>
+                <span style="font-size:0.95rem;font-weight:900;color:#1E3A8A;">Stiker Sheriff Labrador Buka!</span>
+              </div>
+              <div style="background:#FFFFFF;border:2px solid #F59E0B;border-radius:16px;padding:6px 14px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:1.8rem;">🛡️</span>
+                <span style="font-size:0.95rem;font-weight:900;color:#B45309;">Lencana Polisi Tersimpan!</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+            <button class="btn-jumbo-cta" onclick="INARA_APP.afterDishNextAction('again')">
+              🔄 Masak Lagi (Pesanan Baru!)
+            </button>
+            <button class="icon-action-btn" style="min-height:74px;padding:0 22px;font-size:1.1rem;"
+                    onclick="INARA_APP.afterDishNextAction('map')">
+              🗺️ Peta 5 Kedai
+            </button>
+            <button class="icon-action-btn" style="min-height:74px;padding:0 22px;font-size:1.1rem;background:#EFF6FF;border-color:#3B82F6;"
+                    onclick="INARA_AUDIO.speakCustomerPraise('labrador')">
+              🔊 Putar Pujian Sheriff Labrador
+            </button>
+          </div>
         `
             : `
           <div style="background:#FFF9DB;border:4px solid #F59E0B;border-radius:26px;padding:16px 26px;text-align:center;max-width:640px;">
