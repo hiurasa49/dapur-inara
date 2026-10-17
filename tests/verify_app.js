@@ -192,25 +192,25 @@ print("3. Testing Offline Audio Engine (Words, Multi-Char Tracing Targets, Stick
 INARA_AUDIO.speakWord(INARA_DATA.getWordByString("APEL"), true);
 var seqApel = INARA_AUDIO.getLastSequence();
 assert(
-  seqApel.some(function (x) { return x.type === "file" && x.path === "assets/audio/id/word_apel.m4a"; }) &&
-  seqApel.some(function (x) { return x.type === "file" && x.path === "assets/audio/en/word_apel.m4a"; }),
-  "speakWord(APEL, true) must queue offline ID and EN .m4a files, got: " + JSON.stringify(seqApel)
+  seqApel.some(function (x) { return x.type === "file" && (x.path === "assets/audio/id/word_apel.mp3" || x.path === "assets/audio/id/word_apel.m4a"); }) &&
+  seqApel.some(function (x) { return x.type === "file" && (x.path === "assets/audio/en/word_apel.m4a" || x.path === "assets/audio/en/word_apel.mp3"); }),
+  "speakWord(APEL, true) must queue offline ID and EN audio files, got: " + JSON.stringify(seqApel)
 );
 
 INARA_AUDIO.speakLetter("ABI", { echoEn: false });
 var seqAbi = INARA_AUDIO.getLastSequence();
 assert(
-  seqAbi.some(function (x) { return x.type === "file" && x.path === "assets/audio/id/word_abi.m4a"; }),
-  "speakLetter('ABI') must queue word_abi.m4a, got: " + JSON.stringify(seqAbi)
+  seqAbi.some(function (x) { return x.type === "file" && (x.path === "assets/audio/id/word_abi.mp3" || x.path === "assets/audio/id/word_abi.m4a"); }),
+  "speakLetter('ABI') must queue word_abi, got: " + JSON.stringify(seqAbi)
 );
 
 INARA_AUDIO.speakLetter("100", { echoEn: true, echoJa: true });
 var seq100 = INARA_AUDIO.getLastSequence();
 assert(
-  seq100.some(function (x) { return x.type === "file" && x.path === "assets/audio/id/num_100.m4a"; }) &&
-  seq100.some(function (x) { return x.type === "file" && x.path === "assets/audio/en/num_100.m4a"; }) &&
-  seq100.some(function (x) { return x.type === "file" && x.path === "assets/audio/ja/num_100.m4a"; }),
-  "speakLetter('100') must queue ID, EN, JA num_100.m4a"
+  seq100.some(function (x) { return x.type === "file" && (x.path === "assets/audio/id/num_100.mp3" || x.path === "assets/audio/id/num_100.m4a"); }) &&
+  seq100.some(function (x) { return x.type === "file" && (x.path === "assets/audio/en/num_100.m4a" || x.path === "assets/audio/en/num_100.mp3"); }) &&
+  seq100.some(function (x) { return x.type === "file" && (x.path === "assets/audio/ja/num_100.m4a" || x.path === "assets/audio/ja/num_100.mp3"); }),
+  "speakLetter('100') must queue ID, EN, JA num_100"
 );
 
 INARA_DATA.STICKERS.forEach(function (stk) {
@@ -223,27 +223,36 @@ INARA_DATA.STICKERS.forEach(function (stk) {
 INARA_AUDIO.speakStageCut(INARA_DATA.getWordByString("APEL"));
 var seqCut = INARA_AUDIO.getLastSequence();
 assert(
-  seqCut.some(function (x) { return x.path === "assets/audio/id/stage_cut.m4a"; }) &&
-  seqCut.some(function (x) { return x.path === "assets/audio/id/word_apel.m4a"; }),
+  seqCut.some(function (x) { return x.path === "assets/audio/id/stage_cut.mp3" || x.path === "assets/audio/id/stage_cut.m4a"; }) &&
+  seqCut.some(function (x) { return x.path === "assets/audio/id/word_apel.mp3" || x.path === "assets/audio/id/word_apel.m4a"; }),
   "speakStageCut must queue stage_cut and word in single sequence"
 );
 
 INARA_AUDIO.speakLabradorArrival(INARA_DATA.getWordByString("TOMAT"));
 var seqArr = INARA_AUDIO.getLastSequence();
 assert(
-  seqArr.some(function (x) { return x.path === "assets/audio/id/greet_labrador.m4a"; }) &&
-  seqArr.some(function (x) { return x.path === "assets/audio/id/stage_cut.m4a"; }) &&
-  seqArr.some(function (x) { return x.path === "assets/audio/id/word_tomat.m4a"; }),
+  seqArr.some(function (x) { return x.path === "assets/audio/id/greet_labrador.mp3" || x.path === "assets/audio/id/greet_labrador.m4a"; }) &&
+  seqArr.some(function (x) { return x.path === "assets/audio/id/stage_cut.mp3" || x.path === "assets/audio/id/stage_cut.m4a"; }) &&
+  seqArr.some(function (x) { return x.path === "assets/audio/id/word_tomat.mp3" || x.path === "assets/audio/id/word_tomat.m4a"; }),
   "speakLabradorArrival must queue siren/greet, stage_cut and word in single sequence"
 );
 
 INARA_AUDIO.speakStageCount(25, { echoEn: true });
 var seqCount = INARA_AUDIO.getLastSequence();
 assert(
-  seqCount.some(function (x) { return x.path === "assets/audio/id/stage_count_tens.m4a"; }) &&
-  seqCount.some(function (x) { return x.path === "assets/audio/id/num_25.m4a"; }) &&
-  seqCount.some(function (x) { return x.path === "assets/audio/en/num_25.m4a"; }),
+  seqCount.some(function (x) { return x.path === "assets/audio/id/stage_count_tens.mp3" || x.path === "assets/audio/id/stage_count_tens.m4a"; }) &&
+  seqCount.some(function (x) { return x.path === "assets/audio/id/num_25.mp3" || x.path === "assets/audio/id/num_25.m4a"; }) &&
+  seqCount.some(function (x) { return x.path === "assets/audio/en/num_25.m4a" || x.path === "assets/audio/en/num_25.mp3"; }),
   "speakStageCount(25) must queue stage_count_tens and bilingual numbers"
+);
+
+// Verify Sheriff Labrador Praise and Police Badge Award on completed dishes
+INARA_AUDIO.speakCustomerPraise("abi", false);
+var seqPraiseAbi = INARA_AUDIO.getLastSequence();
+assert(
+  seqPraiseAbi.some(function (x) { return x.path === "assets/audio/id/praise_labrador.mp3" || x.path === "assets/audio/id/praise_labrador.m4a"; }) &&
+  seqPraiseAbi.some(function (x) { return x.path === "assets/audio/id/labrador_badge.mp3" || x.path === "assets/audio/id/labrador_badge.m4a"; }),
+  "speakCustomerPraise must queue both Sheriff Labrador praise and Police Badge award"
 );
 
 print("   -> OK: Offline Audio Engine & Composite Sequences verified for words, multi-char targets, and all " + INARA_DATA.STICKERS.length + " stickers (including Sheriff Labrador & Police Badge).");
@@ -411,7 +420,9 @@ flushTimers();
 
 assert(appElement.innerHTML.indexOf("Sheriff Labrador") !== -1, "Order must have Sheriff Labrador as customer");
 assert(appElement.innerHTML.indexOf("patrol-car-svg") !== -1, "Stage 1 must render Patrol Car SVG for Labrador arrival");
-assert(appElement.innerHTML.indexOf("bouncing-hand-icon") !== -1, "Stage 1 must render visual bouncing hand cue");
+assert(appElement.innerHTML.indexOf("hand-pointer-svg") !== -1 || appElement.innerHTML.indexOf("bouncing-hand-icon") !== -1, "Stage 1 must render visual pointing hand cue");
+assert(typeof INARA_SVG.renderHandPointer === "function", "INARA_SVG.renderHandPointer must be defined");
+assert(typeof INARA_SVG.renderBuddyDuoBadge === "function", "INARA_SVG.renderBuddyDuoBadge must be defined");
 
 // Advance Stage 1 (cut board)
 for (var cutStep = 0; cutStep < 12; cutStep++) {

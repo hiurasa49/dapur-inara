@@ -379,8 +379,13 @@ window.INARA_AUDIO = (function () {
       };
       audio.onended = () => finish(true);
       audio.onerror = () => {
-        if (url.endsWith(".m4a")) {
-          const altAudio = new Audio(url.replace(/\.m4a$/, ".mp3"));
+        const altUrl = url.endsWith(".mp3")
+          ? url.replace(/\.mp3$/, ".m4a")
+          : url.endsWith(".m4a")
+          ? url.replace(/\.m4a$/, ".mp3")
+          : null;
+        if (altUrl) {
+          const altAudio = new Audio(altUrl);
           currentAudioEl = altAudio;
           altAudio.onended = () => finish(true);
           altAudio.onerror = () => finish(false);
@@ -490,7 +495,7 @@ window.INARA_AUDIO = (function () {
     } else if (opts.onlyLang === "ja") {
       seq.push(...getJapaneseNumberItems(num));
     } else {
-      seq.push({ type: "file", path: `assets/audio/id/num_${num}.m4a`, fallbackText: info.id, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/num_${num}.mp3`, fallbackText: info.id, lang: "id-ID" });
       if (opts.echoEn) {
         seq.push({ type: "pause", ms: 160 });
         seq.push({ type: "file", path: `assets/audio/en/num_${num}.m4a`, fallbackText: info.en, lang: "en-US" });
@@ -519,11 +524,11 @@ window.INARA_AUDIO = (function () {
     }
 
     seq.push(
-      { type: "file", path: `assets/audio/id/num_${a}.m4a`, fallbackText: String(a), lang: "id-ID" },
-      { type: "file", path: `assets/audio/id/${opKey}.m4a`, fallbackText: opTextId, lang: "id-ID" },
-      { type: "file", path: `assets/audio/id/num_${b}.m4a`, fallbackText: String(b), lang: "id-ID" },
-      { type: "file", path: `assets/audio/id/op_equals.m4a`, fallbackText: "sama dengan", lang: "id-ID" },
-      { type: "file", path: `assets/audio/id/num_${answer}.m4a`, fallbackText: String(answer), lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/num_${a}.mp3`, fallbackText: String(a), lang: "id-ID" },
+      { type: "file", path: `assets/audio/id/${opKey}.mp3`, fallbackText: opTextId, lang: "id-ID" },
+      { type: "file", path: `assets/audio/id/num_${b}.mp3`, fallbackText: String(b), lang: "id-ID" },
+      { type: "file", path: `assets/audio/id/op_equals.mp3`, fallbackText: "sama dengan", lang: "id-ID" },
+      { type: "file", path: `assets/audio/id/num_${answer}.mp3`, fallbackText: String(answer), lang: "id-ID" }
     );
 
     if (includeEnglish) {
@@ -543,7 +548,7 @@ window.INARA_AUDIO = (function () {
   function speakSyllable(syl) {
     const clean = String(syl).toLowerCase().trim();
     return playSequence([
-      { type: "file", path: `assets/audio/id/syl_${clean}.m4a`, fallbackText: clean, lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/syl_${clean}.mp3`, fallbackText: clean, lang: "id-ID" }
     ]);
   }
 
@@ -551,7 +556,7 @@ window.INARA_AUDIO = (function () {
     if (!wordObj) return;
     const wid = String(wordObj.id || wordObj.word || "").toLowerCase().trim();
     const seq = [
-      { type: "file", path: `assets/audio/id/word_${wid}.m4a`, fallbackText: wordObj.word, lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/word_${wid}.mp3`, fallbackText: wordObj.word, lang: "id-ID" }
     ];
     if (includeEcho && wordObj.en) {
       seq.push({ type: "pause", ms: 180 });
@@ -570,12 +575,12 @@ window.INARA_AUDIO = (function () {
     const seq = [];
     (wordObj.syllables || []).forEach((s) => {
       const clean = String(s).toLowerCase().trim();
-      seq.push({ type: "file", path: `assets/audio/id/syl_${clean}.m4a`, fallbackText: clean, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/syl_${clean}.mp3`, fallbackText: clean, lang: "id-ID" });
       seq.push({ type: "pause", ms: 90 });
     });
     const wid = String(wordObj.id || wordObj.word || "").toLowerCase().trim();
     seq.push({ type: "pause", ms: 120 });
-    seq.push({ type: "file", path: `assets/audio/id/word_${wid}.m4a`, fallbackText: wordObj.word, lang: "id-ID" });
+    seq.push({ type: "file", path: `assets/audio/id/word_${wid}.mp3`, fallbackText: wordObj.word, lang: "id-ID" });
     if (includeEcho && wordObj.en) {
       seq.push({ type: "pause", ms: 180 });
       seq.push({
@@ -593,7 +598,7 @@ window.INARA_AUDIO = (function () {
     const ch = raw.toLowerCase();
     if (/^[a-z]$/.test(ch)) {
       return playSequence([
-        { type: "file", path: `assets/audio/id/letter_${ch}.m4a`, fallbackText: ch, lang: "id-ID" }
+        { type: "file", path: `assets/audio/id/letter_${ch}.mp3`, fallbackText: ch, lang: "id-ID" }
       ]);
     }
     if (/^\d+$/.test(ch)) {
@@ -687,7 +692,7 @@ window.INARA_AUDIO = (function () {
       return playSequence([{ type: "custom", slot: "greet_inara" }]);
     }
     return playSequence([
-      { type: "file", path: `assets/audio/id/${phraseKey}.m4a`, fallbackText: fallbackText || phraseKey, lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/${phraseKey}.mp3`, fallbackText: fallbackText || phraseKey, lang: "id-ID" }
     ]);
   }
 
@@ -697,12 +702,12 @@ window.INARA_AUDIO = (function () {
       playPoliceSiren();
       return playSequence([
         { type: "pause", ms: 350 },
-        { type: "file", path: "assets/audio/id/greet_labrador.m4a", fallbackText: cust.greeting, lang: "id-ID" }
+        { type: "file", path: "assets/audio/id/greet_labrador.mp3", fallbackText: cust.greeting, lang: "id-ID" }
       ]);
     }
     const key = cust.greetKey || cust.voiceKey;
     return playSequence([
-      { type: "file", path: `assets/audio/id/${key}.m4a`, fallbackText: cust.greeting, lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/${key}.mp3`, fallbackText: cust.greeting, lang: "id-ID" }
     ]);
   }
 
@@ -717,35 +722,40 @@ window.INARA_AUDIO = (function () {
     } else if (customerId === "labrador") {
       seq.push({
         type: "file",
-        path: "assets/audio/id/praise_labrador.m4a",
+        path: "assets/audio/id/praise_labrador.mp3",
         fallbackText: cust.praise,
         lang: "id-ID"
       });
       seq.push({ type: "pause", ms: 200 });
       seq.push({
         type: "file",
-        path: "assets/audio/id/labrador_badge.m4a",
+        path: "assets/audio/id/labrador_badge.mp3",
         fallbackText: "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
         lang: "id-ID"
       });
-      return playSequence(seq);
     } else {
       seq.push({
         type: "file",
-        path: `assets/audio/id/${cust.voiceKey}.m4a`,
+        path: `assets/audio/id/${cust.voiceKey}.mp3`,
         fallbackText: cust.praise,
         lang: "id-ID"
       });
+      // Sheriff Labrador Buddy Mission Accomplished & Police Badge Award
+      seq.push({ type: "pause", ms: 220 });
+      seq.push({
+        type: "file",
+        path: "assets/audio/id/praise_labrador.mp3",
+        fallbackText: "Luar biasa Chef Inara! Misi memasak berhasil dengan sempurna!",
+        lang: "id-ID"
+      });
+      seq.push({ type: "pause", ms: 200 });
+      seq.push({
+        type: "file",
+        path: "assets/audio/id/labrador_badge.mp3",
+        fallbackText: "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
+        lang: "id-ID"
+      });
     }
-
-    // Sheriff Labrador Buddy Mission Accomplished & Police Badge Award
-    seq.push({ type: "pause", ms: 220 });
-    seq.push({
-      type: "file",
-      path: "assets/audio/id/labrador_badge.m4a",
-      fallbackText: "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
-      lang: "id-ID"
-    });
 
     if (isJapaneseWorld) {
       seq.push({ type: "pause", ms: 200 });
@@ -766,12 +776,12 @@ window.INARA_AUDIO = (function () {
 
   function speakStageCut(wordObj) {
     const seq = [
-      { type: "file", path: "assets/audio/id/stage_cut.m4a", fallbackText: "Tahap satu! Ketuk bahan makanan untuk memotong sambil membaca suku katanya ya, Inara!", lang: "id-ID" }
+      { type: "file", path: "assets/audio/id/stage_cut.mp3", fallbackText: "Tahap satu! Ketuk bahan makanan untuk memotong sambil membaca suku katanya ya, Inara!", lang: "id-ID" }
     ];
     if (wordObj) {
       seq.push({ type: "pause", ms: 220 });
       const wid = String(wordObj.id || wordObj.word || "").toLowerCase().trim();
-      seq.push({ type: "file", path: `assets/audio/id/word_${wid}.m4a`, fallbackText: wordObj.word, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/word_${wid}.mp3`, fallbackText: wordObj.word, lang: "id-ID" });
     }
     return playSequence(seq);
   }
@@ -780,14 +790,14 @@ window.INARA_AUDIO = (function () {
     playPoliceSiren();
     const seq = [
       { type: "pause", ms: 400 },
-      { type: "file", path: "assets/audio/id/greet_labrador.m4a", fallbackText: "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan ingin memesan makanan sehat!", lang: "id-ID" },
+      { type: "file", path: "assets/audio/id/greet_labrador.mp3", fallbackText: "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan ingin memesan makanan sehat!", lang: "id-ID" },
       { type: "pause", ms: 260 },
-      { type: "file", path: "assets/audio/id/stage_cut.m4a", fallbackText: "Tahap satu! Ketuk bahan makanan untuk memotong ya, Inara!", lang: "id-ID" }
+      { type: "file", path: "assets/audio/id/stage_cut.mp3", fallbackText: "Tahap satu! Ketuk bahan makanan untuk memotong ya, Inara!", lang: "id-ID" }
     ];
     if (wordObj) {
       seq.push({ type: "pause", ms: 220 });
       const wid = String(wordObj.id || wordObj.word || "").toLowerCase().trim();
-      seq.push({ type: "file", path: `assets/audio/id/word_${wid}.m4a`, fallbackText: wordObj.word, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/word_${wid}.mp3`, fallbackText: wordObj.word, lang: "id-ID" });
     }
     return playSequence(seq);
   }
@@ -798,9 +808,9 @@ window.INARA_AUDIO = (function () {
     const phraseKey = isTens ? "stage_count_tens" : "stage_count";
     const info = window.INARA_DATA.getNumberInfo(num);
     const seq = [
-      { type: "file", path: `assets/audio/id/${phraseKey}.m4a`, fallbackText: "Tahap dua! Yuk kita masukkan dan hitung bahan makanannya!", lang: "id-ID" },
+      { type: "file", path: `assets/audio/id/${phraseKey}.mp3`, fallbackText: "Tahap dua! Yuk kita masukkan dan hitung bahan makanannya!", lang: "id-ID" },
       { type: "pause", ms: 240 },
-      { type: "file", path: `assets/audio/id/num_${num}.m4a`, fallbackText: info.id, lang: "id-ID" }
+      { type: "file", path: `assets/audio/id/num_${num}.mp3`, fallbackText: info.id, lang: "id-ID" }
     ];
     if (echoOpts.echoEn) {
       seq.push({ type: "pause", ms: 180 });
@@ -815,17 +825,17 @@ window.INARA_AUDIO = (function () {
 
   function speakStageBubble(targetChar) {
     const seq = [
-      { type: "file", path: "assets/audio/id/stage_bubble.m4a", fallbackText: "Tahap tiga! Ketuk gelembung yang menyala!", lang: "id-ID" }
+      { type: "file", path: "assets/audio/id/stage_bubble.mp3", fallbackText: "Tahap tiga! Ketuk gelembung yang menyala!", lang: "id-ID" }
     ];
     if (targetChar) {
       seq.push({ type: "pause", ms: 220 });
       const raw = String(targetChar).trim();
       const ch = raw.toLowerCase();
       if (/^[a-z]$/.test(ch)) {
-        seq.push({ type: "file", path: `assets/audio/id/letter_${ch}.m4a`, fallbackText: raw, lang: "id-ID" });
+        seq.push({ type: "file", path: `assets/audio/id/letter_${ch}.mp3`, fallbackText: raw, lang: "id-ID" });
       } else if (!isNaN(Number(raw))) {
         const num = Number(raw);
-        seq.push({ type: "file", path: `assets/audio/id/num_${num}.m4a`, fallbackText: raw, lang: "id-ID" });
+        seq.push({ type: "file", path: `assets/audio/id/num_${num}.mp3`, fallbackText: raw, lang: "id-ID" });
       }
     }
     return playSequence(seq);
@@ -833,17 +843,17 @@ window.INARA_AUDIO = (function () {
 
   function speakStageTrace(target, echoOpts = {}) {
     const seq = [
-      { type: "file", path: "assets/audio/id/stage_trace.m4a", fallbackText: "Tahap empat! Ikuti bintang berkilau untuk melukis di atas saus!", lang: "id-ID" },
+      { type: "file", path: "assets/audio/id/stage_trace.mp3", fallbackText: "Tahap empat! Ikuti bintang berkilau untuk melukis di atas saus!", lang: "id-ID" },
       { type: "pause", ms: 240 }
     ];
     const raw = String(target || "").trim();
     const ch = raw.toLowerCase();
     if (/^[a-z]$/.test(ch)) {
-      seq.push({ type: "file", path: `assets/audio/id/letter_${ch}.m4a`, fallbackText: raw, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/letter_${ch}.mp3`, fallbackText: raw, lang: "id-ID" });
     } else if (!isNaN(Number(raw))) {
       const num = Math.max(0, Math.min(100, Math.round(Number(raw))));
       const info = window.INARA_DATA.getNumberInfo(num);
-      seq.push({ type: "file", path: `assets/audio/id/num_${num}.m4a`, fallbackText: info.id, lang: "id-ID" });
+      seq.push({ type: "file", path: `assets/audio/id/num_${num}.mp3`, fallbackText: info.id, lang: "id-ID" });
       if (echoOpts.echoEn) {
         seq.push({ type: "pause", ms: 160 });
         seq.push({ type: "file", path: `assets/audio/en/num_${num}.m4a`, fallbackText: info.en, lang: "en-US" });
@@ -856,7 +866,7 @@ window.INARA_AUDIO = (function () {
       const wordObj = window.INARA_DATA.getWordByString(raw) || window.INARA_DATA.getWordById(ch);
       if (wordObj) {
         const wid = String(wordObj.id || wordObj.word || "").toLowerCase().trim();
-        seq.push({ type: "file", path: `assets/audio/id/word_${wid}.m4a`, fallbackText: wordObj.word, lang: "id-ID" });
+        seq.push({ type: "file", path: `assets/audio/id/word_${wid}.mp3`, fallbackText: wordObj.word, lang: "id-ID" });
       }
     }
     return playSequence(seq);

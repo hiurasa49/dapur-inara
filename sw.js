@@ -6,7 +6,7 @@
  * so Chef Inara can play on her Android tablet with Airplane Mode ON (zero lag, zero internet).
  */
 
-const CACHE_NAME = "inara-dapur-ceria-v2.2.0-labrador-buddy";
+const CACHE_NAME = "inara-dapur-ceria-v2.2.1-labrador-buddy";
 
 const PRECACHE_ASSETS = [
   "./",

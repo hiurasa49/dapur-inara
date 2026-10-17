@@ -1170,7 +1170,7 @@ window.INARA_APP = (function () {
           <span class="badge-syl-text">${w.syllables.join(" • ")}</span>
         </div>
         <div class="visual-cue-hint">
-          <span class="bouncing-hand-icon">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
           <span style="font-weight:900;">Ketuk Potong!</span>
         </div>
       `;
@@ -1182,7 +1182,7 @@ window.INARA_APP = (function () {
           <span class="badge-huge-emoji">${activeOrder.countIngredient.emoji}</span>
         </div>
         <div class="visual-cue-hint">
-          <span class="bouncing-hand-icon">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
           <span style="font-weight:900;">Takar ${activeOrder.countIngredient.emoji}!</span>
         </div>
       `;
@@ -1194,7 +1194,7 @@ window.INARA_APP = (function () {
           <span class="badge-huge-math">${mp.a} ${mp.op} ${mp.b} = ❓</span>
         </div>
         <div class="visual-cue-hint">
-          <span class="bouncing-hand-icon">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
           <span style="font-weight:900;">Pilih Jumlah!</span>
         </div>
       `;
@@ -1207,7 +1207,7 @@ window.INARA_APP = (function () {
             <span class="badge-huge-target">🫧 ${targetNum}</span>
           </div>
           <div class="visual-cue-hint">
-            <span class="bouncing-hand-icon">👆</span>
+            ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
             <span style="font-weight:900;">Pecahkan Angka!</span>
           </div>
         `;
@@ -1218,7 +1218,7 @@ window.INARA_APP = (function () {
             <span class="badge-huge-target">🫧 "${targetChar}"</span>
           </div>
           <div class="visual-cue-hint">
-            <span class="bouncing-hand-icon">👆</span>
+            ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
             <span style="font-weight:900;">Pecahkan Huruf!</span>
           </div>
         `;
@@ -1230,7 +1230,7 @@ window.INARA_APP = (function () {
           <span class="badge-huge-target">⭐ "${activeOrder.traceTarget}"</span>
         </div>
         <div class="visual-cue-hint">
-          <span class="bouncing-hand-icon">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
           <span style="font-weight:900;">Lukis Saus!</span>
         </div>
       `;
@@ -1242,7 +1242,7 @@ window.INARA_APP = (function () {
           <span class="badge-syl-text">😋 Nyam!</span>
         </div>
         <div class="visual-cue-hint">
-          <span class="bouncing-hand-icon">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
           <span style="font-weight:900;">Suapi Masakan!</span>
         </div>
       `;
@@ -1276,7 +1276,7 @@ window.INARA_APP = (function () {
         <div class="cooking-workspace">
           <aside class="customer-side-panel buddy-side-panel">
             <div class="buddy-header-badge">
-              <span class="buddy-police-siren">🚨</span>
+              ${SVG.renderBuddyDuoBadge ? SVG.renderBuddyDuoBadge(26) : '<span class="buddy-police-siren">🚨</span>'}
               <span class="buddy-team-name">Sheriff Labrador & Chef Inara</span>
             </div>
             <div class="customer-avatars-pair buddy-avatars-pair">
@@ -1360,7 +1360,7 @@ window.INARA_APP = (function () {
               ${
                 showCutLine
                   ? `<div class="cut-line-indicator" title="Ketuk untuk memotong!">
-                       <span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>
+                       ${SVG.renderHandPointer ? SVG.renderHandPointer(42) : '<span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>'}
                        <span style="font-size:2.4rem;">🔪</span>
                        <span style="font-size:0.82rem;font-weight:900;color:#E11D48;">POTONG!</span>
                      </div>`
@@ -1373,7 +1373,7 @@ window.INARA_APP = (function () {
 
       <div style="display:flex;gap:14px;align-items:center;">
         <button class="btn-jumbo-cta" style="min-height:68px;" onclick="INARA_APP.handleSliceIngredient()">
-          <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(32) : '<span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>'}
           <span>🔪 Potong Suku Kata (${done}/${totalSyls})</span>
         </button>
         <button class="icon-action-btn" style="min-height:68px;padding:0 18px;"
@@ -1455,7 +1455,7 @@ window.INARA_APP = (function () {
           ${Array.from({ length: activeOrder.currentUnits })
             .map(
               (_, i) => `
-            <div class="unit-item-chip" onclick="event.stopPropagation(); INARA_AUDIO.speakNumber(${activeOrder.currentTens * 10 + i + 1}, {echoEn:false})">
+            <div class="unit-item-chip ${isSingleMode ? "jumbo-unit" : ""}" onclick="event.stopPropagation(); INARA_AUDIO.speakNumber(${activeOrder.currentTens * 10 + i + 1}, {echoEn:false})">
               <span>${ing.emoji}</span>
               <span class="chip-num">${activeOrder.currentTens * 10 + i + 1}</span>
             </div>
@@ -1475,7 +1475,7 @@ window.INARA_APP = (function () {
                      <div>+10 Keranjang Puluhan</div>
                      <div style="font-size:0.85rem;opacity:0.9;">(${activeOrder.currentTens}/${info.tensCount} Keranjang = ${activeOrder.currentTens * 10})</div>
                    </div>
-                   ${needMoreTens ? `<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>` : ""}
+                   ${needMoreTens ? `${SVG.renderHandPointer ? SVG.renderHandPointer(32) : '<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>'}` : ""}
                  </button>`
               : ""
           }
@@ -1490,7 +1490,7 @@ window.INARA_APP = (function () {
                 (${activeOrder.currentUnits}/${isSingleMode ? target : info.unitsCount} Satuan)
               </div>
             </div>
-            ${!needMoreTens && needMoreUnits ? `<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>` : ""}
+            ${!needMoreTens && needMoreUnits ? `${SVG.renderHandPointer ? SVG.renderHandPointer(32) : '<span class="bouncing-hand-icon" style="font-size:1.6rem;margin-left:auto;">👆</span>'}` : ""}
           </button>
         </div>
       </div>
@@ -1593,8 +1593,9 @@ window.INARA_APP = (function () {
                  ➕ Masukkan Tambahan ${mp.ingredient.emoji} ke Mangkuk (${activeOrder.mathAddedCount}/${mp.b})
                </button>`
             : `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-                 <div style="font-size:0.95rem;font-weight:900;color:var(--text-muted);">
-                   👆 Ketuk ${mp.ingredient.emoji} di atas untuk menghitung, lalu pilih jawaban yang benar:
+                 <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:1.15rem;font-weight:900;color:var(--pink-dark);">
+                   ${SVG.renderHandPointer ? SVG.renderHandPointer(34) : '<span class="bouncing-hand-icon">👆</span>'}
+                   <span>Pilih Hasil:</span>
                  </div>
                  <div class="math-choices-row">
                    ${mp.choices
@@ -1659,9 +1660,8 @@ window.INARA_APP = (function () {
           </div>
 
           <div style="font-size:1.1rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:10px;">
-            <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
-            <span>Ketuk gelembung emas:</span>
-            <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 16px;color:#B45309;font-size:1.45rem;">${targetNumStr}</span>
+            ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
+            <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 20px;color:#B45309;font-size:1.55rem;font-weight:900;">${targetNumStr}</span>
           </div>
         </div>
       `;
@@ -1696,7 +1696,7 @@ window.INARA_APP = (function () {
             .join("")}
         </div>
 
-        <div class="bubble-pot-arena">
+        <div class="bubble-pot-arena" aria-label="Ketuk gelembung huruf">
           ${activeOrder.bubbleOptions
             .map(
               (ch, idx) => `
@@ -1710,10 +1710,9 @@ window.INARA_APP = (function () {
             .join("")}
         </div>
 
-        <div style="font-size:1.1rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:10px;">
-          <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
-          <span>Ketuk gelembung huruf:</span>
-          <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 16px;color:#B45309;font-size:1.45rem;">${targetChar}</span>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:10px;" aria-label="Ketuk gelembung huruf">
+          ${SVG.renderHandPointer ? SVG.renderHandPointer(36) : '<span class="bouncing-hand-icon">👆</span>'}
+          <span style="background:#FEF3C7;border:3px solid #F59E0B;border-radius:999px;padding:3px 20px;color:#B45309;font-size:1.55rem;font-weight:900;" title="Ketuk gelembung huruf">${targetChar}</span>
         </div>
       </div>
     `;
@@ -1772,7 +1771,7 @@ window.INARA_APP = (function () {
           !doneEating
             ? `
           <div style="font-size:1.4rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:8px;">
-            <span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>
+            ${SVG.renderHandPointer ? SVG.renderHandPointer(38) : '<span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>'}
             <span>Suapi ${activeOrder.customer.name}! (${activeOrder.bitesTaken}/${activeOrder.totalBites})</span>
           </div>
           <div onclick="INARA_APP.handleFeedCustomerBite()"
@@ -1780,7 +1779,7 @@ window.INARA_APP = (function () {
             ${activeOrder.menu.emoji}
           </div>
           <button class="btn-jumbo-cta" onclick="INARA_APP.handleFeedCustomerBite()">
-            <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
+            ${SVG.renderHandPointer ? SVG.renderHandPointer(32) : '<span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>'}
             <span>Suapi ${activeOrder.customer.name} ("Nyam Nyam!")</span>
           </button>
         `

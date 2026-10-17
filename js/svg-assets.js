@@ -464,6 +464,42 @@ window.INARA_SVG = (function () {
     `;
   }
 
+  /**
+   * Renders Animated Cartoon Pointing Hand SVG (👆) for Toddler Zero-Text Interaction
+   */
+  function renderHandPointer(size = 48) {
+    return `
+      <svg class="hand-pointer-svg" width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ketuk di sini">
+        <!-- Pulse glow ring around fingertip -->
+        <circle class="pointer-glow-ring" cx="32" cy="14" r="10" fill="#F59E0B" opacity="0.35"/>
+        <circle cx="32" cy="14" r="5" fill="#FBBF24" opacity="0.6"/>
+        <!-- Glove / Hand Body -->
+        <path d="M 28 14 C 28 8 36 8 36 14 L 36 32 C 38 30 46 30 46 36 L 46 44 C 46 54 38 58 32 58 C 24 58 18 52 18 42 L 18 34 C 18 30 22 28 26 31 L 28 32 Z"
+              fill="#FFE0B2" stroke="#451A03" stroke-width="3" stroke-linejoin="round"/>
+        <!-- Forefinger crease lines -->
+        <line x1="28" y1="22" x2="36" y2="22" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+        <!-- Cuff -->
+        <rect x="22" y="54" width="20" height="7" rx="3" fill="#3B82F6" stroke="#1E293B" stroke-width="2.5"/>
+      </svg>
+    `;
+  }
+
+  /**
+   * Renders Buddy Duo Police Badge Icon for Labrador & Inara Header
+   */
+  function renderBuddyDuoBadge(size = 36) {
+    return `
+      <svg class="buddy-duo-badge-svg" width="${size}" height="${size}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sheriff Labrador dan Chef Inara">
+        <polygon points="24,3 43,14 36,41 24,46 12,41 5,14" fill="#1D4ED8" stroke="#F59E0B" stroke-width="3"/>
+        <polygon points="24,10 27,18 36,18 29,23 31,31 24,26 17,31 19,23 12,18 21,18" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
+        <circle cx="24" cy="22" r="2.8" fill="#1E3A8A"/>
+        <circle cx="21.5" cy="18" r="1.1" fill="#1E3A8A"/>
+        <circle cx="24" cy="16.5" r="1.1" fill="#1E3A8A"/>
+        <circle cx="26.5" cy="18" r="1.1" fill="#1E3A8A"/>
+      </svg>
+    `;
+  }
+
   return {
     renderChefInara,
     renderCustomer: function (customerId = "abi", mood = "happy", size = 125) {
@@ -475,6 +511,8 @@ window.INARA_SVG = (function () {
     renderSheriffLabrador,
     renderPatrolCar,
     renderPoliceBadge,
-    renderTensBasket
+    renderTensBasket,
+    renderHandPointer,
+    renderBuddyDuoBadge
   };
 })();

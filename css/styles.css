@@ -806,10 +806,30 @@ select {
 }
 
 .unit-item-chip.jumbo-unit {
-  width: 88px;
-  height: 88px;
-  font-size: 3rem;
-  border-radius: 22px;
+  width: 108px;
+  height: 108px;
+  font-size: 3.8rem;
+  border-radius: 28px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.hand-pointer-svg {
+  display: inline-block;
+  vertical-align: middle;
+  animation: pointerPulse 1.2s infinite ease-in-out;
+  filter: drop-shadow(0 4px 8px rgba(245, 158, 11, 0.35));
+}
+
+@keyframes pointerPulse {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-7px) scale(1.12); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.buddy-duo-badge-svg {
+  display: inline-block;
+  vertical-align: middle;
+  filter: drop-shadow(0 3px 6px rgba(29, 78, 216, 0.35));
 }
 
 .slice-piece-syl {

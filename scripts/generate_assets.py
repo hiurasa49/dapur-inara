@@ -434,7 +434,7 @@ def update_service_worker():
  * so Chef Inara can play on her Android tablet with Airplane Mode ON (zero lag, zero internet).
  */
 
-const CACHE_NAME = "inara-dapur-ceria-v2.2.0-labrador-buddy";
+const CACHE_NAME = "inara-dapur-ceria-v2.2.1-labrador-buddy";
 
 const PRECACHE_ASSETS = [
 {precache_js}
@@ -495,7 +495,7 @@ self.addEventListener("fetch", (event) => {{
 """
     with open(SW_PATH, "w", encoding="utf-8") as f:
         f.write(sw_content)
-    print(f"Updated sw.js with {len(all_precache)} precached assets (version v2.2.0-labrador-buddy)")
+    print(f"Updated sw.js with {len(all_precache)} precached assets (version {CACHE_NAME})")
 
 
 async def async_main(force=False, concurrency=10, lang=None):
