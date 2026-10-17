@@ -23,7 +23,7 @@ AUDIO_DIR = os.path.join(BASE_DIR, "assets", "audio")
 ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
 SW_PATH = os.path.join(BASE_DIR, "sw.js")
 
-VOICE_ID = "id-ID-GadisNeural"
+VOICE_ID = "id-ID-ArdiNeural"
 VOICE_EN = "en-US-AnaNeural"
 VOICE_JA = "ja-JP-NanamiNeural"
 
@@ -56,8 +56,11 @@ def id_number_text(n: int) -> str:
 
 
 async def synth_task(voice: str, text: str, out_path: str, sem: asyncio.Semaphore, force: bool = False):
-    if not force and os.path.exists(out_path) and os.path.getsize(out_path) > 500:
-        return out_path
+    mp3_path = os.path.splitext(out_path)[0] + ".mp3"
+    m4a_path = os.path.splitext(out_path)[0] + ".m4a"
+
+    if not force and os.path.exists(m4a_path) and os.path.getsize(m4a_path) > 500 and os.path.exists(mp3_path) and os.path.getsize(mp3_path) > 500:
+        return m4a_path
 
     async with sem:
         for attempt in range(4):
@@ -67,21 +70,26 @@ async def synth_task(voice: str, text: str, out_path: str, sem: asyncio.Semaphor
                 comm = edge_tts.Communicate(text, voice)
                 await comm.save(tmp_mp3)
                 if os.path.exists(tmp_mp3) and os.path.getsize(tmp_mp3) > 100:
+                    import shutil
+                    # 1. Save high-bitrate MP3 version directly
+                    shutil.copyfile(tmp_mp3, mp3_path)
+
+                    # 2. Also convert to high-bitrate stereo AAC (.m4a)
                     subprocess.run(
                         [
                             "/usr/bin/afconvert",
                             "-f", "m4af",
                             "-d", "aac",
-                            "-b", "32000",
-                            "-c", "1",
+                            "-b", "64000",
+                            "-c", "2",
                             tmp_mp3,
-                            out_path,
+                            m4a_path,
                         ],
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                     )
-                    return out_path
+                    return m4a_path
             except Exception as e:
                 if attempt == 3:
                     print(f"Error synthesizing '{text}' ({voice}): {e}", file=sys.stderr)
@@ -90,18 +98,18 @@ async def synth_task(voice: str, text: str, out_path: str, sem: asyncio.Semaphor
             finally:
                 if os.path.exists(tmp_mp3):
                     os.remove(tmp_mp3)
-    return out_path
+    return m4a_path
 
 
 def build_audio_tasks():
     tasks = []
-    # 1. Indonesian numbers 0..100
+    # 1. Indonesian numbers 0..100 (Sheriff Labrador Voice)
     for n in range(0, 101):
         txt = id_number_text(n)
         out = os.path.join(AUDIO_DIR, "id", f"num_{n}.m4a")
         tasks.append((VOICE_ID, txt, out))
 
-    # 2. Indonesian letters A..Z
+    # 2. Indonesian letters A..Z (Sheriff Labrador Voice)
     id_letter_phonetics = {
         "a": "a", "b": "be", "c": "ce", "d": "de", "e": "e",
         "f": "ef", "g": "ge", "h": "ha", "i": "i", "j": "je",
@@ -113,33 +121,33 @@ def build_audio_tasks():
         out = os.path.join(AUDIO_DIR, "id", f"letter_{ch}.m4a")
         tasks.append((VOICE_ID, pron, out))
 
-    # 3. Indonesian phrases, math operators, customer praises & Sheriff Labrador
+    # 3. Indonesian phrases, math operators, customer praises & Sheriff Labrador (Natural Kalimat Utuh)
     id_phrases = {
         "op_plus": "ditambah",
         "op_minus": "dikurangi",
         "op_equals": "sama dengan",
-        "welcome": "Halo Koki Inara! Yuk kita masak dan belajar bersama Abi dan Umi!",
-        "stage_cut": "Tahap satu! Ketuk bahan makanan untuk memotong sambil membaca suku katanya ya, Inara!",
-        "stage_count": "Tahap dua! Yuk kita masukkan dan hitung bahan makanannya bersama-sama!",
-        "stage_count_tens": "Tahap dua! Gunakan keranjang puluhan dan bahan satuan supaya cepat dan pintar!",
-        "stage_math_add": "Sekarang tantangan tambah bahan! Yuk kita hitung jumlah semuanya di mangkuk!",
-        "stage_math_sub": "Eh, lihat! Mochi Kucing ikut mencicipi makanan! Sisa berapa ya sekarang?",
-        "stage_bubble": "Tahap tiga! Ketuk gelembung huruf yang menyala untuk mengeja kata!",
-        "stage_trace": "Tahap empat! Ikuti bintang berkilau dengan jari Inara untuk melukis di atas saus!",
-        "stage_eat": "Hore! Masakan Koki Inara sudah matang! Ketuk makanannya untuk menyuapi pelanggan!",
+        "welcome": "Halo Chef Inara! Sheriff Labrador siap berpatroli dan memasak bersama Inara!",
+        "stage_cut": "Tahap satu! Ayo potong bahan makanannya, Chef Inara!",
+        "stage_count": "Tahap dua! Ayo masukkan dan hitung bahan makanannya bersama Sheriff Labrador!",
+        "stage_count_tens": "Tahap dua! Gunakan keranjang puluhan dan satuan agar berhitung cepat!",
+        "stage_math_add": "Tantangan tambah bahan! Ayo hitung jumlah semuanya di mangkuk!",
+        "stage_math_sub": "Wah, makanannya dicicipi! Sisa berapa ya sekarang?",
+        "stage_bubble": "Tahap tiga! Pecahkan gelembung huruf yang menyala, Chef Inara!",
+        "stage_trace": "Tahap empat! Ikuti bintang berkilau untuk melukis saus di atas piring!",
+        "stage_eat": "Hore! Masakan Chef Inara sudah matang! Waktunya menyuapi pelanggan!",
         "praise_abi": "MasyaAllah, pintar sekali Inara anak Abi! Masakan Inara lezat sekali!",
-        "praise_umi": "Alhamdulillah, hebat sekali Inara sayang! Umi bangga sekali sama Koki Inara!",
-        "praise_mochi": "Meong! Nyam nyam, masakan Koki Inara paling enak sedunia!",
-        "praise_bobo": "Hore! Wortel dan masakan buatan Inara bikin Bobo Kelinci semangat melompat!",
-        "praise_kuma": "Hmm, harum dan lezat sekali! Terima kasih ya Koki Inara yang baik hati!",
-        "praise_labrador": "Mantap Chef Inara! Misi memasak berhasil!",
-        "greet_labrador": "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan ingin memesan makanan sehat!",
+        "praise_umi": "Alhamdulillah, hebat sekali Inara sayang! Umi bangga sekali sama Chef Inara!",
+        "praise_mochi": "Meong! Nyam nyam, masakan Chef Inara paling enak sedunia!",
+        "praise_bobo": "Hore! Masakan buatan Inara bikin Bobo Kelinci semangat melompat!",
+        "praise_kuma": "Hmm, harum dan lezat sekali! Terima kasih ya Chef Inara yang baik hati!",
+        "praise_labrador": "Luar biasa Chef Inara! Misi memasak berhasil dengan sempurna!",
+        "greet_labrador": "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan siap memasak bersama Inara!",
         "labrador_badge": "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
         "siren": "Nii noo nii noo! Mobil patroli Sheriff Labrador datang!",
-        "try_again": "Hampir tepat! Yuk coba ketuk yang berkilau ya, Inara sayang!",
-        "great_job": "Hebat sekali Koki Inara! Bintang untuk Inara!",
-        "hundred_party": "Seratus! Wah, Koki Inara sudah pintar berhitung sampai seratus!",
-        "sleepy_kitchen": "Wah, dapurnya sudah mengantuk, Inara sayang. Besok kita masak lagi ya bersama Abi dan Umi! Selamat istirahat!",
+        "try_again": "Hampir tepat! Ayo coba ketuk yang berkilau ya, Chef Inara!",
+        "great_job": "Luar biasa Chef Inara! Bintang untuk Chef Inara!",
+        "hundred_party": "Seratus! Wah, Chef Inara hebat sekali sudah pintar berhitung sampai seratus!",
+        "sleepy_kitchen": "Wah, dapurnya sudah mengantuk, Chef Inara. Besok kita berpatroli dan masak lagi ya bersama Sheriff Labrador! Selamat istirahat!",
         "basket_ten": "Sepuluh!",
     }
     for key, text in id_phrases.items():
@@ -395,7 +403,7 @@ def update_service_worker():
     audio_files = []
     for root, _, files in os.walk(AUDIO_DIR):
         for f in files:
-            if f.endswith(".m4a"):
+            if f.endswith(".m4a") or f.endswith(".mp3"):
                 rel = os.path.relpath(os.path.join(root, f), BASE_DIR)
                 audio_files.append("./" + rel)
     audio_files.sort()
@@ -422,11 +430,11 @@ def update_service_worker():
  * ============================================================================
  * SERVICE WORKER — DAPUR CERIA INARA V2 (100% OFFLINE-FIRST CACHE)
  * ============================================================================
- * Pre-caches HTML, CSS, JS, SVG assets, Icons, and all {len(audio_files)} Edge-TTS voice clips (.m4a)
+ * Pre-caches HTML, CSS, JS, SVG assets, Icons, and all {len(audio_files)} Edge-TTS voice clips (.m4a/.mp3)
  * so Chef Inara can play on her Android tablet with Airplane Mode ON (zero lag, zero internet).
  */
 
-const CACHE_NAME = "inara-dapur-ceria-v2.0.0";
+const CACHE_NAME = "inara-dapur-ceria-v2.2.0-labrador-buddy";
 
 const PRECACHE_ASSETS = [
 {precache_js}
@@ -487,10 +495,10 @@ self.addEventListener("fetch", (event) => {{
 """
     with open(SW_PATH, "w", encoding="utf-8") as f:
         f.write(sw_content)
-    print(f"Updated sw.js with {len(all_precache)} precached assets (version v2.0.0)")
+    print(f"Updated sw.js with {len(all_precache)} precached assets (version v2.2.0-labrador-buddy)")
 
 
-async def async_main(force=False, concurrency=10):
+async def async_main(force=False, concurrency=10, lang=None):
     ensure_dirs()
     print("Generating PWA icons...")
     create_png_icon(os.path.join(ICONS_DIR, "icon-192.png"), 192, maskable=False)
@@ -498,8 +506,14 @@ async def async_main(force=False, concurrency=10):
     create_png_icon(os.path.join(ICONS_DIR, "icon-maskable-512.png"), 512, maskable=True)
     create_png_icon(os.path.join(ICONS_DIR, "apple-touch-icon.png"), 180, maskable=False)
 
-    tasks = build_audio_tasks() + build_word_and_syllable_tasks()
-    print(f"Generating/Refreshing {len(tasks)} Edge-TTS voice clips (.m4a) with concurrency={concurrency} (force={force})...")
+    all_tasks = build_audio_tasks() + build_word_and_syllable_tasks()
+    if lang:
+        target_dir = os.path.join(AUDIO_DIR, lang)
+        tasks = [t for t in all_tasks if target_dir in t[2]]
+    else:
+        tasks = all_tasks
+
+    print(f"Generating/Refreshing {len(tasks)} Edge-TTS voice clips (MP3 + m4a) with concurrency={concurrency} (force={force})...")
 
     sem = asyncio.Semaphore(concurrency)
     done = 0
@@ -519,10 +533,11 @@ async def async_main(force=False, concurrency=10):
 def main():
     parser = argparse.ArgumentParser(description="Generate Dapur Inara V2 Assets")
     parser.add_argument("--force", action="store_true", help="Force regenerate all audio files with Edge-TTS")
-    parser.add_argument("--concurrency", type=int, default=10, help="Concurrent edge-tts connections")
+    parser.add_argument("--lang", type=str, default=None, help="Filter generation to specific lang ('id', 'en', 'ja')")
+    parser.add_argument("--concurrency", type=int, default=12, help="Concurrent edge-tts connections")
     args = parser.parse_args()
 
-    asyncio.run(async_main(force=args.force, concurrency=args.concurrency))
+    asyncio.run(async_main(force=args.force, concurrency=args.concurrency, lang=args.lang))
 
 
 if __name__ == "__main__":

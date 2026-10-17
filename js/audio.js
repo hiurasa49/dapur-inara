@@ -308,7 +308,12 @@ window.INARA_AUDIO = (function () {
     const ctx = getAudioContext();
     if (!ctx || !window.fetch) return null;
     try {
-      const resp = await fetch(url);
+      let resp = await fetch(url);
+      if (!resp.ok && url.endsWith(".m4a")) {
+        resp = await fetch(url.replace(/\.m4a$/, ".mp3"));
+      } else if (!resp.ok && url.endsWith(".mp3")) {
+        resp = await fetch(url.replace(/\.mp3$/, ".m4a"));
+      }
       if (!resp.ok) return null;
       const arrayBuf = await resp.arrayBuffer();
       const audioBuf = await ctx.decodeAudioData(arrayBuf);
@@ -373,7 +378,17 @@ window.INARA_AUDIO = (function () {
         }
       };
       audio.onended = () => finish(true);
-      audio.onerror = () => finish(false);
+      audio.onerror = () => {
+        if (url.endsWith(".m4a")) {
+          const altAudio = new Audio(url.replace(/\.m4a$/, ".mp3"));
+          currentAudioEl = altAudio;
+          altAudio.onended = () => finish(true);
+          altAudio.onerror = () => finish(false);
+          altAudio.play().catch(() => finish(false));
+        } else {
+          finish(false);
+        }
+      };
       audio.play().catch(() => finish(false));
     });
   }
@@ -722,6 +737,15 @@ window.INARA_AUDIO = (function () {
         lang: "id-ID"
       });
     }
+
+    // Sheriff Labrador Buddy Mission Accomplished & Police Badge Award
+    seq.push({ type: "pause", ms: 220 });
+    seq.push({
+      type: "file",
+      path: "assets/audio/id/labrador_badge.m4a",
+      fallbackText: "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
+      lang: "id-ID"
+    });
 
     if (isJapaneseWorld) {
       seq.push({ type: "pause", ms: 200 });

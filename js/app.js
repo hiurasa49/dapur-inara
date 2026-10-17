@@ -459,17 +459,19 @@ window.INARA_APP = (function () {
     state.mastery.numbers[activeOrder.targetNumber] = (state.mastery.numbers[activeOrder.targetNumber] || 0) + 1;
     sessionRecipesCooked++;
 
+    // Sheriff Labrador Buddy permanently awards Police Patrol Badge & Labrador Sticker
+    if (!state.unlockedStickers.includes("stk_police_badge")) {
+      state.unlockedStickers.push("stk_police_badge");
+    }
+    if (!state.unlockedStickers.includes("stk_labrador")) {
+      state.unlockedStickers.push("stk_labrador");
+    }
+    activeOrder.awardedPoliceBadge = true;
+
     if (activeOrder.customer.id === "labrador") {
-      if (!state.unlockedStickers.includes("stk_police_badge")) {
-        state.unlockedStickers.push("stk_police_badge");
-      }
-      if (!state.unlockedStickers.includes("stk_labrador")) {
-        state.unlockedStickers.push("stk_labrador");
-      }
       activeOrder.unlockedSticker = DATA.STICKERS.find((s) => s.id === "stk_police_badge") || DATA.STICKERS.find((s) => s.id === "stk_labrador");
-      activeOrder.awardedPoliceBadge = true;
     } else {
-      // Unlock a new sticker if any remain locked
+      // Unlock another sticker if any remain locked
       const lockedStickers = DATA.STICKERS.filter((s) => !state.unlockedStickers.includes(s.id));
       if (lockedStickers.length > 0) {
         const newlyUnlocked = lockedStickers[0];
@@ -1272,31 +1274,48 @@ window.INARA_APP = (function () {
         </div>
 
         <div class="cooking-workspace">
-          <aside class="customer-side-panel">
+          <aside class="customer-side-panel buddy-side-panel">
+            <div class="buddy-header-badge">
+              <span class="buddy-police-siren">🚨</span>
+              <span class="buddy-team-name">Sheriff Labrador & Chef Inara</span>
+            </div>
+            <div class="customer-avatars-pair buddy-avatars-pair">
+              <div class="buddy-avatar-col" title="Sheriff Labrador (Pemandu & Sahabat)">
+                ${SVG.renderSheriffLabrador(
+                  s === 5 ? (activeOrder.bitesTaken >= activeOrder.totalBites ? "cheering" : "eating") : "happy",
+                  106
+                )}
+                <span class="buddy-badge-pill">Sheriff Labrador</span>
+              </div>
+              <div class="buddy-avatar-col" title="Chef Inara">
+                ${SVG.renderChefInara(state.wardrobe, s === 5 ? "cheering" : "cooking", 96)}
+                <span class="buddy-badge-pill inara-pill">Chef Inara</span>
+              </div>
+            </div>
             ${
               activeOrder.customer.id === "labrador"
                 ? `<div class="patrol-arrival-banner">
                      ${SVG.renderPatrolCar(105)}
                      <span class="patrol-siren-pill">🚨 Sheriff Labrador</span>
                    </div>`
-                : `<div style="font-size:0.9rem;font-weight:900;color:var(--pink-dark);">
-                     Pelanggan: ${activeOrder.customer.title}
+                : `<div class="customer-order-pill">
+                     <span style="font-size:0.75rem;font-weight:900;color:#64748B;">Pesanan Untuk:</span>
+                     <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:2px;">
+                       ${SVG.renderCustomer(
+                         activeOrder.customer.id,
+                         s === 5 ? (activeOrder.bitesTaken >= activeOrder.totalBites ? "cheering" : "eating") : "happy",
+                         38
+                       )}
+                       <strong style="font-size:0.9rem;color:var(--text-dark);">${activeOrder.customer.title}</strong>
+                     </div>
                    </div>`
             }
-            <div class="customer-avatars-pair">
-              ${SVG.renderCustomer(
-                activeOrder.customer.id,
-                s === 5 ? (activeOrder.bitesTaken >= activeOrder.totalBites ? "cheering" : "eating") : "happy",
-                112
-              )}
-              ${SVG.renderChefInara(state.wardrobe, s === 5 ? "cheering" : "cooking", 96)}
-            </div>
             <div class="prompt-bubble-card visual-card-only">
               ${visualCueHtml}
             </div>
-            <button class="btn-speak-again" onclick="INARA_APP.repeatStageVoice()" title="Dengarkan Suara">
-              <span class="speaker-wave-icon">🔊</span>
-              <span>Dengarkan Suara</span>
+            <button class="btn-speak-again" onclick="INARA_APP.repeatStageVoice()" title="Suara Sheriff Labrador">
+              <span class="speaker-wave-icon">🐕🔊</span>
+              <span>Suara Sheriff Labrador</span>
             </button>
           </aside>
 
@@ -1314,10 +1333,7 @@ window.INARA_APP = (function () {
 
     return `
       <div style="text-align:center;">
-        <span style="font-size:0.9rem;font-weight:900;color:var(--text-muted);">
-          Bahan ${activeOrder.currentCutWordIdx + 1} dari ${activeOrder.cutWords.length} • ${wordObj.en} ${wordObj.ja ? `• ${wordObj.ja}` : ""}
-        </span>
-        <div class="syllable-badges-row" style="margin-top:6px;">
+        <div class="syllable-badges-row" style="margin-top:2px;">
           ${wordObj.syllables
             .map(
               (syl, idx) => `
@@ -1344,9 +1360,9 @@ window.INARA_APP = (function () {
               ${
                 showCutLine
                   ? `<div class="cut-line-indicator" title="Ketuk untuk memotong!">
-                       <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
-                       <span style="font-size:2.2rem;">🔪</span>
-                       <span style="font-size:0.78rem;font-weight:900;color:#E11D48;">POTONG!</span>
+                       <span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>
+                       <span style="font-size:2.4rem;">🔪</span>
+                       <span style="font-size:0.82rem;font-weight:900;color:#E11D48;">POTONG!</span>
                      </div>`
                   : ""
               }
@@ -1357,7 +1373,8 @@ window.INARA_APP = (function () {
 
       <div style="display:flex;gap:14px;align-items:center;">
         <button class="btn-jumbo-cta" style="min-height:68px;" onclick="INARA_APP.handleSliceIngredient()">
-          🔪 Potong Suku Kata (${done}/${totalSyls})
+          <span class="bouncing-hand-icon" style="font-size:1.6rem;">👆</span>
+          <span>🔪 Potong Suku Kata (${done}/${totalSyls})</span>
         </button>
         <button class="icon-action-btn" style="min-height:68px;padding:0 18px;"
                 onclick="INARA_AUDIO.speakSyllablesThenWord(INARA_DATA.getWordById('${wordObj.id}'), true)">
@@ -1754,30 +1771,29 @@ window.INARA_APP = (function () {
         ${
           !doneEating
             ? `
-          <div style="font-size:1.3rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:8px;">
-            <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
+          <div style="font-size:1.4rem;font-weight:900;color:var(--pink-dark);display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span class="bouncing-hand-icon" style="font-size:2.2rem;">👆</span>
             <span>Suapi ${activeOrder.customer.name}! (${activeOrder.bitesTaken}/${activeOrder.totalBites})</span>
           </div>
           <div onclick="INARA_APP.handleFeedCustomerBite()"
-               style="width:165px;height:165px;border-radius:50%;background:#FFF9DB;border:6px solid #F59E0B;display:flex;align-items:center;justify-content:center;font-size:5.5rem;cursor:pointer;transform:scale(${scale});transition:transform 0.25s ease;box-shadow:0 10px 25px rgba(245,158,11,0.28);">
+               style="width:190px;height:190px;border-radius:50%;background:#FFF9DB;border:8px solid #F59E0B;display:flex;align-items:center;justify-content:center;font-size:6.8rem;cursor:pointer;transform:scale(${scale});transition:transform 0.25s ease;box-shadow:0 14px 34px rgba(245,158,11,0.32);">
             ${activeOrder.menu.emoji}
           </div>
           <button class="btn-jumbo-cta" onclick="INARA_APP.handleFeedCustomerBite()">
-            <span class="bouncing-hand-icon" style="font-size:1.5rem;">👆</span>
+            <span class="bouncing-hand-icon" style="font-size:1.8rem;">👆</span>
             <span>Suapi ${activeOrder.customer.name} ("Nyam Nyam!")</span>
           </button>
         `
-            : activeOrder.customer.id === "labrador"
-            ? `
-          <div class="police-badge-award-card" style="background:linear-gradient(180deg,#EFF6FF 0%,#DBEAFE 100%);border:5px solid #2563EB;border-radius:28px;padding:20px;text-align:center;box-shadow:0 12px 30px rgba(37,99,235,0.25);max-width:640px;margin:0 auto;">
+            : `
+          <div class="police-badge-award-card" style="background:linear-gradient(180deg,#EFF6FF 0%,#DBEAFE 100%);border:5px solid #2563EB;border-radius:28px;padding:22px;text-align:center;box-shadow:0 14px 34px rgba(37,99,235,0.25);max-width:640px;margin:0 auto;">
             <div style="font-size:2rem;font-weight:900;color:#1E3A8A;margin-bottom:8px;">⭐⭐⭐ +3 Bintang untuk Koki Inara!</div>
             <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0;flex-wrap:wrap;">
               <div onclick="INARA_AUDIO.playSparkle(); INARA_AUDIO.speakPhrase('labrador_badge')" style="cursor:pointer;" title="Lencana Patroli Polisi Inara">
-                ${SVG.renderPoliceBadge(125)}
+                ${SVG.renderPoliceBadge(135)}
               </div>
               <div style="text-align:left;max-width:340px;">
-                <div style="font-size:0.85rem;font-weight:900;color:#1D4ED8;letter-spacing:1px;">PENGHARGAAN SPESIAL POLISI</div>
-                <div style="font-size:1.4rem;font-weight:900;color:#1E3A8A;">Lencana Patroli Polisi</div>
+                <div style="font-size:0.85rem;font-weight:900;color:#1D4ED8;letter-spacing:1px;">PENGHARGAAN SPESIAL POLISI 🚨</div>
+                <div style="font-size:1.45rem;font-weight:900;color:#1E3A8A;">Lencana Patroli Polisi</div>
                 <h2 style="font-size:1.15rem;color:#1E40AF;margin:6px 0;font-weight:800;">
                   "${activeOrder.customer.praise}"
                 </h2>
@@ -1793,6 +1809,14 @@ window.INARA_APP = (function () {
                 <span style="font-size:1.8rem;">🛡️</span>
                 <span style="font-size:0.95rem;font-weight:900;color:#B45309;">Lencana Polisi Tersimpan!</span>
               </div>
+              ${
+                activeOrder.unlockedSticker && activeOrder.unlockedSticker.id !== "stk_police_badge" && activeOrder.unlockedSticker.id !== "stk_labrador"
+                  ? `<div style="background:#FFFFFF;border:2px solid #10B981;border-radius:16px;padding:6px 14px;display:flex;align-items:center;gap:8px;">
+                       <span style="font-size:1.8rem;">${activeOrder.unlockedSticker.emoji}</span>
+                       <span style="font-size:0.95rem;font-weight:900;color:#065F46;">${activeOrder.unlockedSticker.name} Buka!</span>
+                     </div>`
+                  : ""
+              }
             </div>
           </div>
 
@@ -1805,41 +1829,8 @@ window.INARA_APP = (function () {
               🗺️ Peta 5 Kedai
             </button>
             <button class="icon-action-btn" style="min-height:74px;padding:0 22px;font-size:1.1rem;background:#EFF6FF;border-color:#3B82F6;"
-                    onclick="INARA_AUDIO.speakCustomerPraise('labrador')">
-              🔊 Putar Pujian Sheriff Labrador
-            </button>
-          </div>
-        `
-            : `
-          <div style="background:#FFF9DB;border:4px solid #F59E0B;border-radius:26px;padding:16px 26px;text-align:center;max-width:640px;">
-            <div style="font-size:2.2rem;">⭐⭐⭐ +3 Bintang untuk Koki Inara!</div>
-            <h2 style="font-size:1.4rem;color:var(--pink-dark);margin:6px 0;">
-              "${activeOrder.customer.praise}"
-            </h2>
-            ${
-              activeOrder.unlockedSticker
-                ? `<div style="margin-top:8px;background:#FFFFFF;border:3px dashed #10B981;border-radius:18px;padding:8px 16px;display:inline-flex;align-items:center;gap:10px;">
-                     <span style="font-size:2.2rem;">${activeOrder.unlockedSticker.emoji}</span>
-                     <div style="text-align:left;">
-                       <div style="font-size:0.8rem;font-weight:900;color:#059669;">STIKER BARU TERBUKA!</div>
-                       <div style="font-size:1.05rem;font-weight:900;">${activeOrder.unlockedSticker.name}</div>
-                     </div>
-                   </div>`
-                : ""
-            }
-          </div>
-
-          <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
-            <button class="btn-jumbo-cta" onclick="INARA_APP.afterDishNextAction('again')">
-              🔄 Masak Lagi (Pesanan Baru!)
-            </button>
-            <button class="icon-action-btn" style="min-height:74px;padding:0 22px;font-size:1.1rem;"
-                    onclick="INARA_APP.afterDishNextAction('map')">
-              🗺️ Peta 5 Kedai
-            </button>
-            <button class="icon-action-btn" style="min-height:74px;padding:0 22px;font-size:1.1rem;background:#FFF0F5;border-color:#FF6F91;"
                     onclick="INARA_AUDIO.speakCustomerPraise('${activeOrder.customer.id}', ${Boolean(activeOrder.world.isJapaneseWorld)})">
-              🔊 Putar Pujian ${activeOrder.customer.name}
+              🔊 Putar Pujian Sheriff Labrador
             </button>
           </div>
         `
