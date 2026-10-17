@@ -6,12 +6,27 @@
  * 5 free-play stations, custom parent words, offline audio queue, and Parent Gate.
  */
 
-var window = this;
+if (typeof load === "undefined" && typeof require !== "undefined") {
+  var fs = require("fs");
+  var vm = require("vm");
+  global.print = console.log;
+  global.load = function (f) {
+    vm.runInThisContext(fs.readFileSync(f, "utf8"), f);
+  };
+}
+
+var window = typeof global !== "undefined" ? global : this;
+if (typeof global !== "undefined") {
+  global.window = global;
+}
 var mockStorage = {};
 var localStorage = {
   getItem: function (k) { return mockStorage[k] || null; },
   setItem: function (k, v) { mockStorage[k] = String(v); }
 };
+if (typeof global !== "undefined") {
+  global.localStorage = localStorage;
+}
 
 var appElement = { innerHTML: "" };
 var customSylInput = { value: "KA-KAK" };
@@ -98,6 +113,15 @@ var Audio = function (src) {
     pause: function () {}
   };
 };
+
+if (typeof global !== "undefined") {
+  global.document = document;
+  global.navigator = navigator;
+  global.Audio = Audio;
+  global.setTimeout = setTimeout;
+  global.setInterval = setInterval;
+  global.clearInterval = clearInterval;
+}
 
 load("js/data.js");
 load("js/svg-assets.js");
@@ -194,7 +218,7 @@ INARA_DATA.STICKERS.forEach(function (stk) {
   var seqStk = INARA_AUDIO.getLastSequence();
   assert(seqStk.length > 0 && seqStk[0].type === "file", "Sticker " + stk.id + " must queue offline audio file");
 });
-print("   -> OK: Offline Audio Engine verified for words, multi-char targets, and all 54 stickers.");
+print("   -> OK: Offline Audio Engine verified for words, multi-char targets, and all " + INARA_DATA.STICKERS.length + " stickers (including Sheriff Labrador & Police Badge).");
 
 print("4. Testing Full 5-Stage Cooking Loop (Stage 1 -> 2A -> 2B -> 3 -> 4 -> 5) across Worlds 1..5...");
 INARA_APP.init();

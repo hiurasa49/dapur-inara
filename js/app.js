@@ -385,23 +385,22 @@ window.INARA_APP = (function () {
     const s = activeOrder.stageIndex;
     if (s === 0) {
       const w = activeOrder.cutWords[activeOrder.currentCutWordIdx];
-      AUDIO.speakPhrase("stage_cut");
-      setTimeout(() => {
-        if (activeOrder && activeOrder.uid === orderUid && activeOrder.stageIndex === 0) {
+      if (activeOrder.customer.id === "labrador" && activeOrder.currentCutWordIdx === 0 && !activeOrder.labradorGreeted) {
+        activeOrder.labradorGreeted = true;
+        AUDIO.speakCustomerGreeting("labrador");
+      } else {
+        AUDIO.speakPhrase("stage_cut");
+        if (w) {
           AUDIO.speakWord(w, false);
         }
-      }, 2800);
+      }
     } else if (s === 1) {
       if (activeOrder.targetNumber > 10) {
         AUDIO.speakPhrase("stage_count_tens");
       } else {
         AUDIO.speakPhrase("stage_count");
       }
-      setTimeout(() => {
-        if (activeOrder && activeOrder.uid === orderUid && activeOrder.stageIndex === 1) {
-          AUDIO.speakNumber(activeOrder.targetNumber, getEchoOpts(activeOrder.world.isJapaneseWorld));
-        }
-      }, 2700);
+      AUDIO.speakNumber(activeOrder.targetNumber, getEchoOpts(activeOrder.world.isJapaneseWorld));
     } else if (s === 2) {
       const mp = activeOrder.mathProblem;
       if (mp.op === "+") {
@@ -412,25 +411,21 @@ window.INARA_APP = (function () {
       }
     } else if (s === 3) {
       AUDIO.speakPhrase("stage_bubble");
-      setTimeout(() => {
-        if (activeOrder && activeOrder.uid === orderUid && activeOrder.stageIndex === 3) {
-          const targetChar =
-            activeOrder.bubbleMode === "numseq"
-              ? activeOrder.numSeqItems[activeOrder.spellIndex]
-              : activeOrder.spellWord[activeOrder.spellIndex];
-          if (targetChar) AUDIO.speakLetter(targetChar);
-        }
-      }, 2600);
+      const targetChar =
+        activeOrder.bubbleMode === "numseq"
+          ? activeOrder.numSeqItems[activeOrder.spellIndex]
+          : activeOrder.spellWord[activeOrder.spellIndex];
+      if (targetChar) AUDIO.speakLetter(targetChar);
     } else if (s === 4) {
       AUDIO.speakPhrase("stage_trace");
-      setTimeout(() => {
-        if (activeOrder && activeOrder.uid === orderUid && activeOrder.stageIndex === 4) {
-          AUDIO.speakLetter(activeOrder.traceTarget, getEchoOpts(activeOrder.world.isJapaneseWorld));
-        }
-      }, 2600);
+      AUDIO.speakLetter(activeOrder.traceTarget, getEchoOpts(activeOrder.world.isJapaneseWorld));
     } else if (s === 5) {
       AUDIO.playFanfare();
-      AUDIO.speakPhrase("stage_eat");
+      if (activeOrder.customer.id === "labrador") {
+        AUDIO.speakCustomerPraise("labrador");
+      } else {
+        AUDIO.speakPhrase("stage_eat");
+      }
     }
   }
 
@@ -466,14 +461,25 @@ window.INARA_APP = (function () {
     state.mastery.numbers[activeOrder.targetNumber] = (state.mastery.numbers[activeOrder.targetNumber] || 0) + 1;
     sessionRecipesCooked++;
 
-    // Unlock a new sticker if any remain locked
-    const lockedStickers = DATA.STICKERS.filter((s) => !state.unlockedStickers.includes(s.id));
-    if (lockedStickers.length > 0) {
-      const newlyUnlocked = lockedStickers[0];
-      state.unlockedStickers.push(newlyUnlocked.id);
-      activeOrder.unlockedSticker = newlyUnlocked;
+    if (activeOrder.customer.id === "labrador") {
+      if (!state.unlockedStickers.includes("stk_police_badge")) {
+        state.unlockedStickers.push("stk_police_badge");
+      }
+      if (!state.unlockedStickers.includes("stk_labrador")) {
+        state.unlockedStickers.push("stk_labrador");
+      }
+      activeOrder.unlockedSticker = DATA.STICKERS.find((s) => s.id === "stk_police_badge") || DATA.STICKERS.find((s) => s.id === "stk_labrador");
+      activeOrder.awardedPoliceBadge = true;
     } else {
-      activeOrder.unlockedSticker = pickRandom(DATA.STICKERS);
+      // Unlock a new sticker if any remain locked
+      const lockedStickers = DATA.STICKERS.filter((s) => !state.unlockedStickers.includes(s.id));
+      if (lockedStickers.length > 0) {
+        const newlyUnlocked = lockedStickers[0];
+        state.unlockedStickers.push(newlyUnlocked.id);
+        activeOrder.unlockedSticker = newlyUnlocked;
+      } else {
+        activeOrder.unlockedSticker = pickRandom(DATA.STICKERS);
+      }
     }
 
     saveState();
@@ -1138,33 +1144,92 @@ window.INARA_APP = (function () {
     ];
 
     let boardHtml = "";
-    let promptText = "";
+    let visualCueHtml = "";
 
     if (s === 0) {
       const w = activeOrder.cutWords[activeOrder.currentCutWordIdx];
-      promptText = `Ketuk bahan <strong>${w.emoji} ${w.word}</strong> (${w.en}) untuk memotong sambil membaca suku katanya: <strong>${w.syllables.join(" - ")}</strong>!`;
+      visualCueHtml = `
+        <div class="visual-target-pill">
+          <span class="badge-huge-emoji">${w.emoji}</span>
+          <span class="badge-syl-text">${w.syllables.join(" • ")}</span>
+        </div>
+        <div class="visual-cue-hint">
+          <span class="bouncing-hand-icon">👆</span>
+          <span style="font-weight:900;">Ketuk Potong!</span>
+        </div>
+      `;
       boardHtml = renderStage1Cut(w);
     } else if (s === 1) {
-      promptText = `${activeOrder.customer.name} pesan takaran angka <strong>${activeOrder.targetNumber} (${activeOrder.numInfo.id} / ${activeOrder.numInfo.en})</strong> ${activeOrder.countIngredient.emoji}!`;
+      visualCueHtml = `
+        <div class="visual-target-pill">
+          <span class="badge-huge-target">🎯 ${activeOrder.targetNumber}</span>
+          <span class="badge-huge-emoji">${activeOrder.countIngredient.emoji}</span>
+        </div>
+        <div class="visual-cue-hint">
+          <span class="bouncing-hand-icon">👆</span>
+          <span style="font-weight:900;">Takar ${activeOrder.countIngredient.emoji}!</span>
+        </div>
+      `;
       boardHtml = renderStage2Count();
     } else if (s === 2) {
       const mp = activeOrder.mathProblem;
-      promptText = mp.storyId;
+      visualCueHtml = `
+        <div class="visual-target-pill">
+          <span class="badge-huge-math">${mp.a} ${mp.op} ${mp.b} = ❓</span>
+        </div>
+        <div class="visual-cue-hint">
+          <span class="bouncing-hand-icon">👆</span>
+          <span style="font-weight:900;">Pilih Jumlah!</span>
+        </div>
+      `;
       boardHtml = renderStage2Math(mp);
     } else if (s === 3) {
       if (activeOrder.bubbleMode === "numseq") {
         const targetNum = activeOrder.numSeqItems[activeOrder.numSeqMissingIdx];
-        promptText = `Lengkapi urutan angka di panci: ketuk gelembung angka <strong>"${targetNum}"</strong>!`;
+        visualCueHtml = `
+          <div class="visual-target-pill">
+            <span class="badge-huge-target">🫧 ${targetNum}</span>
+          </div>
+          <div class="visual-cue-hint">
+            <span class="bouncing-hand-icon">👆</span>
+            <span style="font-weight:900;">Pecahkan Angka!</span>
+          </div>
+        `;
       } else {
         const targetChar = activeOrder.spellWord[activeOrder.spellIndex] || "";
-        promptText = `Ketuk gelembung huruf <strong>"${targetChar}"</strong> untuk mengeja kata <strong>${activeOrder.spellWord}</strong>!`;
+        visualCueHtml = `
+          <div class="visual-target-pill">
+            <span class="badge-huge-target">🫧 "${targetChar}"</span>
+          </div>
+          <div class="visual-cue-hint">
+            <span class="bouncing-hand-icon">👆</span>
+            <span style="font-weight:900;">Pecahkan Huruf!</span>
+          </div>
+        `;
       }
       boardHtml = renderStage3Bubbles();
     } else if (s === 4) {
-      promptText = `Ikuti bintang bernomor <strong>1, 2, 3...</strong> dengan jari Inara untuk melukis <strong>"${activeOrder.traceTarget}"</strong> di atas saus!`;
+      visualCueHtml = `
+        <div class="visual-target-pill">
+          <span class="badge-huge-target">⭐ "${activeOrder.traceTarget}"</span>
+        </div>
+        <div class="visual-cue-hint">
+          <span class="bouncing-hand-icon">👆</span>
+          <span style="font-weight:900;">Lukis Saus!</span>
+        </div>
+      `;
       boardHtml = renderStage4Trace();
     } else {
-      promptText = `Hore! <strong>${activeOrder.menu.emoji} ${activeOrder.menu.name}</strong> sudah matang! Ketuk makanannya untuk menyuapi ${activeOrder.customer.name}!`;
+      visualCueHtml = `
+        <div class="visual-target-pill">
+          <span class="badge-huge-emoji">${activeOrder.menu.emoji}</span>
+          <span class="badge-syl-text">😋 Nyam!</span>
+        </div>
+        <div class="visual-cue-hint">
+          <span class="bouncing-hand-icon">👆</span>
+          <span style="font-weight:900;">Suapi Masakan!</span>
+        </div>
+      `;
       boardHtml = renderStage5Reward();
     }
 
@@ -1173,10 +1238,10 @@ window.INARA_APP = (function () {
         <div class="cooking-top-progress">
           <div style="display:flex;align-items:center;gap:10px;">
             <button class="icon-action-btn" style="min-height:46px;" onclick="INARA_APP.selectWorld(${activeOrder.world.level})">
-              ⬅️ Menu Kedai
+              ⬅️ Menu
             </button>
-            <span style="font-size:1.4rem;">${activeOrder.menu.emoji}</span>
-            <strong style="font-size:1.05rem;">${activeOrder.menu.name}</strong>
+            <span style="font-size:1.5rem;" class="floating-item-icon">${activeOrder.menu.emoji}</span>
+            <strong style="font-size:1.1rem;color:var(--text-dark);">${activeOrder.menu.name}</strong>
           </div>
           <div class="stage-steps-row">
             ${steps
@@ -1194,22 +1259,30 @@ window.INARA_APP = (function () {
 
         <div class="cooking-workspace">
           <aside class="customer-side-panel">
-            <div style="font-size:0.88rem;font-weight:900;color:var(--pink-dark);">
-              Pelanggan: ${activeOrder.customer.title}
-            </div>
+            ${
+              activeOrder.customer.id === "labrador"
+                ? `<div class="patrol-arrival-banner">
+                     ${SVG.renderPatrolCar(105)}
+                     <span class="patrol-siren-pill">🚨 Sheriff Labrador</span>
+                   </div>`
+                : `<div style="font-size:0.9rem;font-weight:900;color:var(--pink-dark);">
+                     Pelanggan: ${activeOrder.customer.title}
+                   </div>`
+            }
             <div class="customer-avatars-pair">
               ${SVG.renderCustomer(
                 activeOrder.customer.id,
                 s === 5 ? (activeOrder.bitesTaken >= activeOrder.totalBites ? "cheering" : "eating") : "happy",
-                110
+                112
               )}
               ${SVG.renderChefInara(state.wardrobe, s === 5 ? "cheering" : "cooking", 96)}
             </div>
-            <div class="prompt-bubble-card">
-              ${promptText}
+            <div class="prompt-bubble-card visual-card-only">
+              ${visualCueHtml}
             </div>
-            <button class="btn-speak-again" onclick="INARA_APP.repeatStageVoice()">
-              🔊 Dengarkan Suara
+            <button class="btn-speak-again" onclick="INARA_APP.repeatStageVoice()" title="Dengarkan Suara">
+              <span class="speaker-wave-icon">🔊</span>
+              <span>Dengarkan Suara</span>
             </button>
           </aside>
 

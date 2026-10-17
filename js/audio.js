@@ -212,6 +212,35 @@ window.INARA_AUDIO = (function () {
     });
   }
 
+  function playPoliceSiren() {
+    if (isMuted) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+
+      // Two-tone cheerful cartoon police siren
+      osc.frequency.setValueAtTime(650, now);
+      osc.frequency.linearRampToValueAtTime(920, now + 0.26);
+      osc.frequency.linearRampToValueAtTime(650, now + 0.52);
+      osc.frequency.linearRampToValueAtTime(920, now + 0.78);
+      osc.frequency.linearRampToValueAtTime(650, now + 1.04);
+
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.22, now + 0.05);
+      gain.gain.setValueAtTime(0.22, now + 1.0);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.22);
+    } catch (e) {}
+  }
+
   function playSleepyLullaby() {
     const notes = [
       [659.25, 0.0, 0.45],
@@ -249,6 +278,12 @@ window.INARA_AUDIO = (function () {
   // =========================================================================
   function stopSpeech() {
     playbackToken++;
+    if (currentBufferSource) {
+      try {
+        currentBufferSource.stop();
+      } catch (e) {}
+      currentBufferSource = null;
+    }
     if (currentAudioEl) {
       try {
         currentAudioEl.pause();
@@ -263,12 +298,62 @@ window.INARA_AUDIO = (function () {
     }
   }
 
+  const audioBufferCache = new Map();
+  let currentBufferSource = null;
+
+  async function getAudioBuffer(url) {
+    if (audioBufferCache.has(url)) {
+      return audioBufferCache.get(url);
+    }
+    const ctx = getAudioContext();
+    if (!ctx || !window.fetch) return null;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const arrayBuf = await resp.arrayBuffer();
+      const audioBuf = await ctx.decodeAudioData(arrayBuf);
+      audioBufferCache.set(url, audioBuf);
+      return audioBuf;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function playSingleAudioUrl(url, token) {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       if (isMuted || token !== playbackToken) {
         resolve(false);
         return;
       }
+
+      // Fast-path: Web Audio API Buffer playback (0ms latency, zero lag)
+      const ctx = getAudioContext();
+      const canUseWebAudio = ctx && window.fetch && window.location && window.location.protocol !== "file:";
+
+      if (canUseWebAudio) {
+        try {
+          const buf = await getAudioBuffer(url);
+          if (buf && token === playbackToken && !isMuted) {
+            const source = ctx.createBufferSource();
+            source.buffer = buf;
+            source.connect(ctx.destination);
+            currentBufferSource = source;
+            let settled = false;
+            const finish = (ok) => {
+              if (!settled) {
+                settled = true;
+                if (currentBufferSource === source) currentBufferSource = null;
+                resolve(ok);
+              }
+            };
+            source.onended = () => finish(true);
+            source.start(0);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // HTML5 Audio fallback & Test Harness mock compatibility
       const audio = new Audio(url);
       currentAudioEl = audio;
       let settled = false;
@@ -553,7 +638,9 @@ window.INARA_AUDIO = (function () {
     stk_baca: { type: "word", id: "pintar" },
     stk_trace: { type: "phrase", key: "great_job" },
     stk_trophy: { type: "phrase", key: "great_job" },
-    stk_rainbow: { type: "word", id: "merah" }
+    stk_rainbow: { type: "word", id: "merah" },
+    stk_labrador: { type: "phrase", key: "praise_labrador" },
+    stk_police_badge: { type: "phrase", key: "labrador_badge" }
   };
 
   function speakSticker(stkId, echoEn = true) {
@@ -580,6 +667,21 @@ window.INARA_AUDIO = (function () {
     ]);
   }
 
+  function speakCustomerGreeting(customerId) {
+    const cust = window.INARA_DATA.CUSTOMERS.find((c) => c.id === customerId) || window.INARA_DATA.CUSTOMERS[0];
+    if (customerId === "labrador") {
+      playPoliceSiren();
+      return playSequence([
+        { type: "pause", ms: 350 },
+        { type: "file", path: "assets/audio/id/greet_labrador.m4a", fallbackText: cust.greeting, lang: "id-ID" }
+      ]);
+    }
+    const key = cust.greetKey || cust.voiceKey;
+    return playSequence([
+      { type: "file", path: `assets/audio/id/${key}.m4a`, fallbackText: cust.greeting, lang: "id-ID" }
+    ]);
+  }
+
   function speakCustomerPraise(customerId, isJapaneseWorld = false) {
     const cust = window.INARA_DATA.CUSTOMERS.find((c) => c.id === customerId) || window.INARA_DATA.CUSTOMERS[0];
     const seq = [];
@@ -588,6 +690,21 @@ window.INARA_AUDIO = (function () {
       seq.push({ type: "custom", slot: "praise_abi" });
     } else if (customerId === "umi" && hasCustomRecording("praise_umi")) {
       seq.push({ type: "custom", slot: "praise_umi" });
+    } else if (customerId === "labrador") {
+      seq.push({
+        type: "file",
+        path: "assets/audio/id/praise_labrador.m4a",
+        fallbackText: cust.praise,
+        lang: "id-ID"
+      });
+      seq.push({ type: "pause", ms: 200 });
+      seq.push({
+        type: "file",
+        path: "assets/audio/id/labrador_badge.m4a",
+        fallbackText: "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
+        lang: "id-ID"
+      });
+      return playSequence(seq);
     } else {
       seq.push({
         type: "file",
@@ -637,6 +754,7 @@ window.INARA_AUDIO = (function () {
     playSparkle,
     playGentleHint,
     playFanfare,
+    playPoliceSiren,
     playSleepyLullaby,
     toggleBgm,
     stopSpeech,
@@ -650,6 +768,7 @@ window.INARA_AUDIO = (function () {
     speakLetter,
     speakSticker,
     speakPhrase,
+    speakCustomerGreeting,
     speakCustomerPraise,
     speakJapanesePhrase,
     setMuted,

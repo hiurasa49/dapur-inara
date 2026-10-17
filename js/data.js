@@ -169,6 +169,20 @@ window.INARA_DATA = (function () {
       greeting: "Halo Koki Inara! Kuma mencium aroma harum dari dapur Inara nih!",
       praise: "Hmm, harum dan lezat sekali! Terima kasih ya Koki Inara yang baik hati!",
       praiseEn: "Mmm, so delicious! Thank you, kind Chef Inara!"
+    },
+    {
+      id: "labrador",
+      name: "Sheriff Labrador",
+      title: "Sheriff Labrador (Polisi Ramah)",
+      emoji: "🐕",
+      color: "#1E40AF",
+      bgLight: "#EFF6FF",
+      voiceKey: "praise_labrador",
+      greetKey: "greet_labrador",
+      badgeKey: "labrador_badge",
+      greeting: "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan ingin memesan makanan sehat!",
+      praise: "Mantap Chef Inara! Misi memasak berhasil!",
+      praiseEn: "Great job Chef Inara! Cooking mission accomplished!"
     }
   ];
 
@@ -875,7 +889,10 @@ window.INARA_DATA = (function () {
     { id: "stk_baca", name: "Ratu Baca BA-CA", emoji: "📚", category: "Bintang Juara" },
     { id: "stk_trace", name: "Pelukis Saus", emoji: "🎨", category: "Bintang Juara" },
     { id: "stk_trophy", name: "Piala Koki Utama", emoji: "🏆", category: "Bintang Juara" },
-    { id: "stk_rainbow", name: "Pelangi Ceria", emoji: "🌈", category: "Bintang Juara" }
+    { id: "stk_rainbow", name: "Pelangi Ceria", emoji: "🌈", category: "Bintang Juara" },
+    // Karakter Tamu Spesial: Sheriff Labrador
+    { id: "stk_labrador", name: "Sheriff Labrador", emoji: "🐕", category: "Keluarga" },
+    { id: "stk_police_badge", name: "Lencana Patroli Polisi", emoji: "🛡️", category: "Bintang Juara" }
   ];
 
   const WARDROBE = {

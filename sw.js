@@ -1,12 +1,12 @@
 /**
  * ============================================================================
- * SERVICE WORKER — DAPUR CERIA INARA (100% OFFLINE-FIRST CACHE)
+ * SERVICE WORKER — DAPUR CERIA INARA V2 (100% OFFLINE-FIRST CACHE)
  * ============================================================================
- * Caches HTML, CSS, JS, Icons, and all 593 native voice audio clips (.m4a)
- * so Inara can play on her Android tablet with Airplane Mode ON (0 internet).
+ * Pre-caches HTML, CSS, JS, SVG assets, Icons, and all 610 Edge-TTS voice clips (.m4a)
+ * so Chef Inara can play on her Android tablet with Airplane Mode ON (zero lag, zero internet).
  */
 
-const CACHE_NAME = "inara-dapur-ceria-v1.1.0";
+const CACHE_NAME = "inara-dapur-ceria-v2.0.0";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -22,7 +22,9 @@ const PRECACHE_ASSETS = [
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-maskable-512.png",
   "./assets/audio/en/great_job.m4a",
+  "./assets/audio/en/greet_labrador.m4a",
   "./assets/audio/en/hundred_party.m4a",
+  "./assets/audio/en/labrador_badge.m4a",
   "./assets/audio/en/num_0.m4a",
   "./assets/audio/en/num_1.m4a",
   "./assets/audio/en/num_10.m4a",
@@ -127,6 +129,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/en/op_equals.m4a",
   "./assets/audio/en/op_minus.m4a",
   "./assets/audio/en/op_plus.m4a",
+  "./assets/audio/en/praise_labrador.m4a",
   "./assets/audio/en/word_abi.m4a",
   "./assets/audio/en/word_alpukat.m4a",
   "./assets/audio/en/word_anggur.m4a",
@@ -165,6 +168,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/en/word_kiwi.m4a",
   "./assets/audio/en/word_koki.m4a",
   "./assets/audio/en/word_kuning.m4a",
+  "./assets/audio/en/word_labrador.m4a",
   "./assets/audio/en/word_lemon.m4a",
   "./assets/audio/en/word_lima.m4a",
   "./assets/audio/en/word_madu.m4a",
@@ -177,11 +181,13 @@ const PRECACHE_ASSETS = [
   "./assets/audio/en/word_nasi.m4a",
   "./assets/audio/en/word_nori.m4a",
   "./assets/audio/en/word_onigiri.m4a",
+  "./assets/audio/en/word_patroli.m4a",
   "./assets/audio/en/word_pepaya.m4a",
   "./assets/audio/en/word_pintar.m4a",
   "./assets/audio/en/word_piring.m4a",
   "./assets/audio/en/word_pisang.m4a",
   "./assets/audio/en/word_pizza.m4a",
+  "./assets/audio/en/word_polisi.m4a",
   "./assets/audio/en/word_quran.m4a",
   "./assets/audio/en/word_ramen.m4a",
   "./assets/audio/en/word_roti.m4a",
@@ -211,7 +217,9 @@ const PRECACHE_ASSETS = [
   "./assets/audio/en/word_zaitun.m4a",
   "./assets/audio/id/basket_ten.m4a",
   "./assets/audio/id/great_job.m4a",
+  "./assets/audio/id/greet_labrador.m4a",
   "./assets/audio/id/hundred_party.m4a",
+  "./assets/audio/id/labrador_badge.m4a",
   "./assets/audio/id/letter_a.m4a",
   "./assets/audio/id/letter_b.m4a",
   "./assets/audio/id/letter_c.m4a",
@@ -345,8 +353,10 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/praise_abi.m4a",
   "./assets/audio/id/praise_bobo.m4a",
   "./assets/audio/id/praise_kuma.m4a",
+  "./assets/audio/id/praise_labrador.m4a",
   "./assets/audio/id/praise_mochi.m4a",
   "./assets/audio/id/praise_umi.m4a",
+  "./assets/audio/id/siren.m4a",
   "./assets/audio/id/sleepy_kitchen.m4a",
   "./assets/audio/id/stage_bubble.m4a",
   "./assets/audio/id/stage_count.m4a",
@@ -366,6 +376,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/syl_bi.m4a",
   "./assets/audio/id/syl_bis.m4a",
   "./assets/audio/id/syl_bo.m4a",
+  "./assets/audio/id/syl_bra.m4a",
   "./assets/audio/id/syl_bro.m4a",
   "./assets/audio/id/syl_bu.m4a",
   "./assets/audio/id/syl_bung.m4a",
@@ -379,6 +390,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/syl_dek.m4a",
   "./assets/audio/id/syl_do.m4a",
   "./assets/audio/id/syl_dok.m4a",
+  "./assets/audio/id/syl_dor.m4a",
   "./assets/audio/id/syl_du.m4a",
   "./assets/audio/id/syl_em.m4a",
   "./assets/audio/id/syl_es.m4a",
@@ -446,6 +458,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/syl_pi.m4a",
   "./assets/audio/id/syl_pin.m4a",
   "./assets/audio/id/syl_piz.m4a",
+  "./assets/audio/id/syl_po.m4a",
   "./assets/audio/id/syl_pu.m4a",
   "./assets/audio/id/syl_pung.m4a",
   "./assets/audio/id/syl_pur.m4a",
@@ -475,6 +488,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/syl_tel.m4a",
   "./assets/audio/id/syl_ti.m4a",
   "./assets/audio/id/syl_to.m4a",
+  "./assets/audio/id/syl_tro.m4a",
   "./assets/audio/id/syl_tu.m4a",
   "./assets/audio/id/syl_tun.m4a",
   "./assets/audio/id/syl_tus.m4a",
@@ -536,6 +550,7 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/word_kiwi.m4a",
   "./assets/audio/id/word_koki.m4a",
   "./assets/audio/id/word_kuning.m4a",
+  "./assets/audio/id/word_labrador.m4a",
   "./assets/audio/id/word_lemon.m4a",
   "./assets/audio/id/word_lima.m4a",
   "./assets/audio/id/word_madu.m4a",
@@ -548,11 +563,13 @@ const PRECACHE_ASSETS = [
   "./assets/audio/id/word_nasi.m4a",
   "./assets/audio/id/word_nori.m4a",
   "./assets/audio/id/word_onigiri.m4a",
+  "./assets/audio/id/word_patroli.m4a",
   "./assets/audio/id/word_pepaya.m4a",
   "./assets/audio/id/word_pintar.m4a",
   "./assets/audio/id/word_piring.m4a",
   "./assets/audio/id/word_pisang.m4a",
   "./assets/audio/id/word_pizza.m4a",
+  "./assets/audio/id/word_polisi.m4a",
   "./assets/audio/id/word_quran.m4a",
   "./assets/audio/id/word_ramen.m4a",
   "./assets/audio/id/word_roti.m4a",
@@ -617,63 +634,53 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      // Cache core shell + icons first so install never fails
-      const shellAssets = PRECACHE_ASSETS.slice(0, 12);
-      await cache.addAll(shellAssets);
-
-      // Cache audio & secondary assets in batches
-      const rest = PRECACHE_ASSETS.slice(12);
-      const batchSize = 30;
-      for (let i = 0; i < rest.length; i += batchSize) {
-        const chunk = rest.slice(i, i + batchSize);
-        await Promise.allSettled(chunk.map((url) => cache.add(url)));
-      }
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        )
       )
-    ).then(() => self.clients.claim())
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const req = event.request;
+  if (req.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            networkResponse.type === "basic"
-          ) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type !== "basic") {
+            return response;
           }
-          return networkResponse;
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(req, toCache);
+          });
+          return response;
         })
         .catch(() => {
-          if (event.request.mode === "navigate") {
+          if (req.mode === "navigate") {
             return caches.match("./index.html");
           }
-          return new Response("", { status: 404, statusText: "Offline" });
         });
     })
   );

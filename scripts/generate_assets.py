@@ -1,19 +1,31 @@
 #!/usr/bin/env python3
 """
-Generator for Dapur Ceria Inara offline voice clips (.m4a via macOS `say` + `afconvert`)
-and PWA PNG icons (`assets/icons/`).
+Generator for Dapur Ceria Inara V2 offline voice clips via Microsoft Edge-TTS
+- Indonesian: id-ID-GadisNeural (cheerful, soft, expressive cartoon child tone)
+- English: en-US-AnaNeural (cheerful English child tone)
+- Japanese: ja-JP-NanamiNeural (friendly Japanese anime tone)
+Audio files are converted to high-efficiency offline .m4a (AAC) via macOS afconvert.
+Also generates PWA icons and automatically synchronizes sw.js precache list.
 """
 import os
+import sys
 import subprocess
 import tempfile
 import struct
 import zlib
 import math
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import asyncio
+import argparse
+import edge_tts
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = os.path.join(BASE_DIR, "assets", "audio")
 ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
+SW_PATH = os.path.join(BASE_DIR, "sw.js")
+
+VOICE_ID = "id-ID-GadisNeural"
+VOICE_EN = "en-US-AnaNeural"
+VOICE_JA = "ja-JP-NanamiNeural"
 
 
 def ensure_dirs():
@@ -43,36 +55,41 @@ def id_number_text(n: int) -> str:
     return str(n)
 
 
-def synth_one(task):
-    voice, rate, text, out_path = task
-    if os.path.exists(out_path) and os.path.getsize(out_path) > 500:
+async def synth_task(voice: str, text: str, out_path: str, sem: asyncio.Semaphore, force: bool = False):
+    if not force and os.path.exists(out_path) and os.path.getsize(out_path) > 500:
         return out_path
-    with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp:
-        aiff_path = tmp.name
-    try:
-        subprocess.run(
-            ["/usr/bin/say", "-v", voice, "-r", str(rate), "-o", aiff_path, text],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        subprocess.run(
-            [
-                "/usr/bin/afconvert",
-                "-f", "m4af",
-                "-d", "aac",
-                "-b", "32000",
-                "-c", "1",
-                aiff_path,
-                out_path,
-            ],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    finally:
-        if os.path.exists(aiff_path):
-            os.remove(aiff_path)
+
+    async with sem:
+        for attempt in range(4):
+            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                tmp_mp3 = tmp.name
+            try:
+                comm = edge_tts.Communicate(text, voice)
+                await comm.save(tmp_mp3)
+                if os.path.exists(tmp_mp3) and os.path.getsize(tmp_mp3) > 100:
+                    subprocess.run(
+                        [
+                            "/usr/bin/afconvert",
+                            "-f", "m4af",
+                            "-d", "aac",
+                            "-b", "32000",
+                            "-c", "1",
+                            tmp_mp3,
+                            out_path,
+                        ],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    return out_path
+            except Exception as e:
+                if attempt == 3:
+                    print(f"Error synthesizing '{text}' ({voice}): {e}", file=sys.stderr)
+                    return None
+                await asyncio.sleep(0.6 * (attempt + 1))
+            finally:
+                if os.path.exists(tmp_mp3):
+                    os.remove(tmp_mp3)
     return out_path
 
 
@@ -82,7 +99,7 @@ def build_audio_tasks():
     for n in range(0, 101):
         txt = id_number_text(n)
         out = os.path.join(AUDIO_DIR, "id", f"num_{n}.m4a")
-        tasks.append(("Damayanti", 165, txt, out))
+        tasks.append((VOICE_ID, txt, out))
 
     # 2. Indonesian letters A..Z
     id_letter_phonetics = {
@@ -94,9 +111,9 @@ def build_audio_tasks():
     }
     for ch, pron in id_letter_phonetics.items():
         out = os.path.join(AUDIO_DIR, "id", f"letter_{ch}.m4a")
-        tasks.append(("Damayanti", 155, pron, out))
+        tasks.append((VOICE_ID, pron, out))
 
-    # 3. Indonesian phrases, math operators, and family words
+    # 3. Indonesian phrases, math operators, customer praises & Sheriff Labrador
     id_phrases = {
         "op_plus": "ditambah",
         "op_minus": "dikurangi",
@@ -115,6 +132,10 @@ def build_audio_tasks():
         "praise_mochi": "Meong! Nyam nyam, masakan Koki Inara paling enak sedunia!",
         "praise_bobo": "Hore! Wortel dan masakan buatan Inara bikin Bobo Kelinci semangat melompat!",
         "praise_kuma": "Hmm, harum dan lezat sekali! Terima kasih ya Koki Inara yang baik hati!",
+        "praise_labrador": "Mantap Chef Inara! Misi memasak berhasil!",
+        "greet_labrador": "Halo Chef Inara! Sheriff Labrador sedang berpatroli dan ingin memesan makanan sehat!",
+        "labrador_badge": "Ini Lencana Patroli Polisi untuk Chef Inara yang hebat!",
+        "siren": "Nii noo nii noo! Mobil patroli Sheriff Labrador datang!",
         "try_again": "Hampir tepat! Yuk coba ketuk yang berkilau ya, Inara sayang!",
         "great_job": "Hebat sekali Koki Inara! Bintang untuk Inara!",
         "hundred_party": "Seratus! Wah, Koki Inara sudah pintar berhitung sampai seratus!",
@@ -127,12 +148,12 @@ def build_audio_tasks():
     }
     for key, text in id_phrases.items():
         out = os.path.join(AUDIO_DIR, "id", f"{key}.m4a")
-        tasks.append(("Damayanti", 165, text, out))
+        tasks.append((VOICE_ID, text, out))
 
     # 4. English numbers 0..100 & operators
     for n in range(0, 101):
         out = os.path.join(AUDIO_DIR, "en", f"num_{n}.m4a")
-        tasks.append(("Samantha", 165, str(n), out))
+        tasks.append((VOICE_EN, str(n), out))
 
     en_phrases = {
         "op_plus": "plus",
@@ -140,12 +161,15 @@ def build_audio_tasks():
         "op_equals": "equals",
         "great_job": "Wonderful job, Chef Inara!",
         "hundred_party": "One hundred! Amazing job, Chef Inara!",
+        "praise_labrador": "Great job Chef Inara! Cooking mission accomplished!",
+        "greet_labrador": "Hello Chef Inara! Sheriff Labrador on patrol ordering healthy food!",
+        "labrador_badge": "Here is the Police Patrol Badge for wonderful Chef Inara!",
     }
     for key, text in en_phrases.items():
         out = os.path.join(AUDIO_DIR, "en", f"{key}.m4a")
-        tasks.append(("Samantha", 165, text, out))
+        tasks.append((VOICE_EN, text, out))
 
-    # 5. Japanese numbers (0..20, 30..100) & phrases
+    # 5. Japanese numbers & phrases
     ja_nums = {
         0: "ゼロ",
         1: "いち", 2: "に", 3: "さん", 4: "よん", 5: "ご",
@@ -157,7 +181,7 @@ def build_audio_tasks():
     }
     for n, txt in ja_nums.items():
         out = os.path.join(AUDIO_DIR, "ja", f"num_{n}.m4a")
-        tasks.append(("Kyoko", 160, txt, out))
+        tasks.append((VOICE_JA, txt, out))
 
     ja_phrases = {
         "itadakimasu": "いただきます！",
@@ -168,99 +192,9 @@ def build_audio_tasks():
     }
     for key, txt in ja_phrases.items():
         out = os.path.join(AUDIO_DIR, "ja", f"{key}.m4a")
-        tasks.append(("Kyoko", 160, txt, out))
+        tasks.append((VOICE_JA, txt, out))
 
     return tasks
-
-
-def create_png_icon(filename: str, size: int, maskable: bool = False):
-    """
-    Generates a cheerful pastel Chef Hat + Heart + Star icon in pure Python PNG format
-    so there are zero external imaging library dependencies.
-    """
-    width = height = size
-    pixels = bytearray(width * height * 4)
-
-    cx = width / 2.0
-    cy = height / 2.0
-    r_max = width / 2.0
-
-    for y in range(height):
-        for x in range(width):
-            idx = (y * width + x) * 4
-            # Normalized coords -1..1
-            nx = (x - cx) / r_max
-            ny = (y - cy) / r_max
-            dist = math.hypot(nx, ny)
-
-            # Rounded rect / circle mask for non-maskable
-            if not maskable:
-                # Superellipse (squircle)
-                sq = abs(nx) ** 4.5 + abs(ny) ** 4.5
-                if sq > 0.94:
-                    pixels[idx:idx+4] = bytes([0, 0, 0, 0])
-                    continue
-
-            # Warm pastel radial gradient background (strawberry cream to peach-pink)
-            t = min(1.0, dist / 1.2)
-            r = int(255 - t * 18)
-            g = int(138 - t * 35)
-            b = int(168 - t * 20)
-
-            # Soft inner cream circle badge
-            if dist < 0.72:
-                r, g, b = 255, 248, 240
-            elif dist < 0.76:
-                r, g, b = 255, 210, 125
-
-            # Chef hat clouds (top center)
-            # Three overlapping circles for the puff + headband rectangle
-            c1 = math.hypot(nx - 0.0, ny + 0.25) < 0.22
-            c2 = math.hypot(nx + 0.18, ny + 0.18) < 0.17
-            c3 = math.hypot(nx - 0.18, ny + 0.18) < 0.17
-            band = (-0.24 <= nx <= 0.24) and (-0.02 <= ny <= 0.14)
-            band_stripe = (-0.24 <= nx <= 0.24) and (0.04 <= ny <= 0.09)
-
-            if c1 or c2 or c3 or band:
-                r, g, b = 255, 255, 255
-                if band_stripe:
-                    r, g, b = 255, 111, 145
-
-            # Cute smiling face / rosy cheeks below hat
-            cheek_l = math.hypot(nx + 0.20, ny - 0.30) < 0.065
-            cheek_r = math.hypot(nx - 0.20, ny - 0.30) < 0.065
-            eye_l = math.hypot(nx + 0.12, ny - 0.22) < 0.038
-            eye_r = math.hypot(nx - 0.12, ny - 0.22) < 0.038
-            smile_dist = math.hypot(nx, ny - 0.24)
-            smile = (0.08 <= smile_dist <= 0.115) and (ny > 0.25)
-
-            if cheek_l or cheek_r:
-                r, g, b = 255, 168, 188
-            if eye_l or eye_r or smile:
-                r, g, b = 92, 55, 76
-
-            # Golden star on top of hat
-            if math.hypot(nx, ny + 0.24) < 0.075:
-                r, g, b = 255, 200, 61
-
-            pixels[idx:idx+4] = bytes([r, g, b, 255])
-
-    def png_chunk(chunk_type: bytes, data: bytes) -> bytes:
-        chunk = chunk_type + data
-        return struct.pack("!I", len(data)) + chunk + struct.pack("!I", zlib.crc32(chunk) & 0xFFFFFFFF)
-
-    raw_rows = bytearray()
-    stride = width * 4
-    for y in range(height):
-        raw_rows.append(0)  # Filter type 0 (None)
-        raw_rows.extend(pixels[y * stride : (y + 1) * stride])
-
-    ihdr = struct.pack("!IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    idat = zlib.compress(bytes(raw_rows), 9)
-    png_bytes = b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr) + png_chunk(b"IDAT", idat) + png_chunk(b"IEND", b"")
-
-    with open(filename, "wb") as f:
-        f.write(png_bytes)
 
 
 def build_word_and_syllable_tasks():
@@ -347,19 +281,20 @@ def build_word_and_syllable_tasks():
         "foto": ("Foto", "Photo", ["FO", "TO"]),
         "quran": ("Quran", "Quran", ["QUR", "AN"]),
         "xilofon": ("Xilofon", "Xylophone", ["XI", "LO", "FON"]),
+        "labrador": ("Sheriff Labrador", "Sheriff Labrador", ["LA", "BRA", "DOR"]),
+        "polisi": ("Polisi", "Police", ["PO", "LI", "SI"]),
+        "patroli": ("Patroli", "Patrol", ["PA", "TRO", "LI"]),
     }
     extra_tasks = []
-    # Also include common custom family syllables (KA-KAK, NE-NEK, A-DEK, PA-MAN, TAN-TE, BUNG-SU)
-    syllable_set = {"kak", "nek", "dek", "man", "tan", "bung"}
+    syllable_set = {"kak", "nek", "dek", "man", "tan", "bung", "la", "bra", "dor", "po", "li", "si", "pa", "tro"}
     for wid, (wtext, entext, syls) in words_syllables.items():
         out_w = os.path.join(AUDIO_DIR, "id", f"word_{wid}.m4a")
-        extra_tasks.append(("Damayanti", 160, wtext, out_w))
+        extra_tasks.append((VOICE_ID, wtext, out_w))
         out_en = os.path.join(AUDIO_DIR, "en", f"word_{wid}.m4a")
-        extra_tasks.append(("Samantha", 165, entext, out_en))
+        extra_tasks.append((VOICE_EN, entext, out_en))
         for s in syls:
             syllable_set.add(s.lower())
 
-    # Also generate common custom family words in ID
     family_custom_words = {
         "cust_kakak": "Kakak",
         "cust_nenek": "Nenek",
@@ -370,16 +305,196 @@ def build_word_and_syllable_tasks():
     }
     for cwid, cwtext in family_custom_words.items():
         out_cw = os.path.join(AUDIO_DIR, "id", f"word_{cwid}.m4a")
-        extra_tasks.append(("Damayanti", 160, cwtext, out_cw))
+        extra_tasks.append((VOICE_ID, cwtext, out_cw))
 
     for syl in sorted(syllable_set):
         out_s = os.path.join(AUDIO_DIR, "id", f"syl_{syl}.m4a")
-        extra_tasks.append(("Damayanti", 150, syl, out_s))
+        extra_tasks.append((VOICE_ID, syl, out_s))
 
     return extra_tasks
 
 
-def main():
+def create_png_icon(filename: str, size: int, maskable: bool = False):
+    width = height = size
+    pixels = bytearray(width * height * 4)
+
+    cx = width / 2.0
+    cy = height / 2.0
+    r_max = width / 2.0
+
+    for y in range(height):
+        for x in range(width):
+            idx = (y * width + x) * 4
+            nx = (x - cx) / r_max
+            ny = (y - cy) / r_max
+            dist = math.hypot(nx, ny)
+
+            if not maskable:
+                sq = abs(nx) ** 4.5 + abs(ny) ** 4.5
+                if sq > 0.94:
+                    pixels[idx:idx+4] = bytes([0, 0, 0, 0])
+                    continue
+
+            t = min(1.0, dist / 1.2)
+            r = int(255 - t * 18)
+            g = int(138 - t * 35)
+            b = int(168 - t * 20)
+
+            if dist < 0.72:
+                r, g, b = 255, 248, 240
+            elif dist < 0.76:
+                r, g, b = 255, 210, 125
+
+            c1 = math.hypot(nx - 0.0, ny + 0.25) < 0.22
+            c2 = math.hypot(nx + 0.18, ny + 0.18) < 0.17
+            c3 = math.hypot(nx - 0.18, ny + 0.18) < 0.17
+            band = (-0.24 <= nx <= 0.24) and (-0.02 <= ny <= 0.14)
+            band_stripe = (-0.24 <= nx <= 0.24) and (0.04 <= ny <= 0.09)
+
+            if c1 or c2 or c3 or band:
+                r, g, b = 255, 255, 255
+                if band_stripe:
+                    r, g, b = 255, 111, 145
+
+            cheek_l = math.hypot(nx + 0.20, ny - 0.30) < 0.065
+            cheek_r = math.hypot(nx - 0.20, ny - 0.30) < 0.065
+            eye_l = math.hypot(nx + 0.12, ny - 0.22) < 0.038
+            eye_r = math.hypot(nx - 0.12, ny - 0.22) < 0.038
+            smile_dist = math.hypot(nx, ny - 0.24)
+            smile = (0.08 <= smile_dist <= 0.115) and (ny > 0.25)
+
+            if cheek_l or cheek_r:
+                r, g, b = 255, 168, 188
+            if eye_l or eye_r or smile:
+                r, g, b = 92, 55, 76
+
+            if math.hypot(nx, ny + 0.24) < 0.075:
+                r, g, b = 255, 200, 61
+
+            pixels[idx:idx+4] = bytes([r, g, b, 255])
+
+    def png_chunk(chunk_type: bytes, data: bytes) -> bytes:
+        chunk = chunk_type + data
+        return struct.pack("!I", len(data)) + chunk + struct.pack("!I", zlib.crc32(chunk) & 0xFFFFFFFF)
+
+    raw_rows = bytearray()
+    stride = width * 4
+    for y in range(height):
+        raw_rows.append(0)
+        raw_rows.extend(pixels[y * stride : (y + 1) * stride])
+
+    ihdr = struct.pack("!IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    idat = zlib.compress(bytes(raw_rows), 9)
+    png_bytes = b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr) + png_chunk(b"IDAT", idat) + png_chunk(b"IEND", b"")
+
+    with open(filename, "wb") as f:
+        f.write(png_bytes)
+
+
+def update_service_worker():
+    """Scans all assets and updates sw.js with fresh precache list and bumped version."""
+    if not os.path.exists(SW_PATH):
+        return
+
+    audio_files = []
+    for root, _, files in os.walk(AUDIO_DIR):
+        for f in files:
+            if f.endswith(".m4a"):
+                rel = os.path.relpath(os.path.join(root, f), BASE_DIR)
+                audio_files.append("./" + rel)
+    audio_files.sort()
+
+    static_assets = [
+        "./",
+        "./index.html",
+        "./manifest.json",
+        "./css/styles.css",
+        "./js/data.js",
+        "./js/svg-assets.js",
+        "./js/audio.js",
+        "./js/app.js",
+        "./assets/icons/apple-touch-icon.png",
+        "./assets/icons/icon-192.png",
+        "./assets/icons/icon-512.png",
+        "./assets/icons/icon-maskable-512.png",
+    ]
+
+    all_precache = static_assets + audio_files
+    precache_js = ",\n".join(f'  "{p}"' for p in all_precache)
+
+    sw_content = f"""/**
+ * ============================================================================
+ * SERVICE WORKER — DAPUR CERIA INARA V2 (100% OFFLINE-FIRST CACHE)
+ * ============================================================================
+ * Pre-caches HTML, CSS, JS, SVG assets, Icons, and all {len(audio_files)} Edge-TTS voice clips (.m4a)
+ * so Chef Inara can play on her Android tablet with Airplane Mode ON (zero lag, zero internet).
+ */
+
+const CACHE_NAME = "inara-dapur-ceria-v2.0.0";
+
+const PRECACHE_ASSETS = [
+{precache_js}
+];
+
+self.addEventListener("install", (event) => {{
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
+}});
+
+self.addEventListener("activate", (event) => {{
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {{
+            if (key !== CACHE_NAME) {{
+              return caches.delete(key);
+            }}
+          }})
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+}});
+
+self.addEventListener("fetch", (event) => {{
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  event.respondWith(
+    caches.match(req).then((cached) => {{
+      if (cached) return cached;
+      return fetch(req)
+        .then((response) => {{
+          if (!response || response.status !== 200 || response.type !== "basic") {{
+            return response;
+          }}
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {{
+            cache.put(req, toCache);
+          }});
+          return response;
+        }})
+        .catch(() => {{
+          if (req.mode === "navigate") {{
+            return caches.match("./index.html");
+          }}
+        }});
+    }})
+  );
+}});
+"""
+    with open(SW_PATH, "w", encoding="utf-8") as f:
+        f.write(sw_content)
+    print(f"Updated sw.js with {len(all_precache)} precached assets (version v2.0.0)")
+
+
+async def async_main(force=False, concurrency=10):
     ensure_dirs()
     print("Generating PWA icons...")
     create_png_icon(os.path.join(ICONS_DIR, "icon-192.png"), 192, maskable=False)
@@ -388,18 +503,31 @@ def main():
     create_png_icon(os.path.join(ICONS_DIR, "apple-touch-icon.png"), 180, maskable=False)
 
     tasks = build_audio_tasks() + build_word_and_syllable_tasks()
-    print(f"Generating {len(tasks)} offline voice clips (.m4a)...")
+    print(f"Generating/Refreshing {len(tasks)} Edge-TTS voice clips (.m4a) with concurrency={concurrency} (force={force})...")
+
+    sem = asyncio.Semaphore(concurrency)
     done = 0
-    with ThreadPoolExecutor(max_workers=10) as pool:
-        futures = [pool.submit(synth_one, t) for t in tasks]
-        for fut in as_completed(futures):
-            fut.result()
-            done += 1
-            if done % 50 == 0 or done == len(tasks):
-                print(f"  Progress: {done}/{len(tasks)} clips generated")
-    print("All assets generated successfully!")
+    total = len(tasks)
+
+    coros = [synth_task(v, txt, out, sem, force=force) for (v, txt, out) in tasks]
+    for fut in asyncio.as_completed(coros):
+        await fut
+        done += 1
+        if done % 50 == 0 or done == total:
+            print(f"  Progress: {done}/{total} clips generated")
+
+    print("All voice clips generated successfully!")
+    update_service_worker()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate Dapur Inara V2 Assets")
+    parser.add_argument("--force", action="store_true", help="Force regenerate all audio files with Edge-TTS")
+    parser.add_argument("--concurrency", type=int, default=10, help="Concurrent edge-tts connections")
+    args = parser.parse_args()
+
+    asyncio.run(async_main(force=args.force, concurrency=args.concurrency))
 
 
 if __name__ == "__main__":
     main()
-

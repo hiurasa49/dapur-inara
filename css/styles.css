@@ -1446,3 +1446,163 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   V2 ZERO-TEXT VISUAL-FIRST UX & SHERIFF LABRADOR STYLES
+   ========================================================================== */
+.visual-card-only {
+  padding: 10px;
+  background: #FFFFFF;
+  border: 3.5px solid var(--pink-main);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 14px rgba(255, 111, 145, 0.18);
+  width: 100%;
+}
+
+.visual-target-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--yellow-light);
+  border: 2px solid #FCD34D;
+  border-radius: 16px;
+}
+
+.badge-huge-emoji {
+  font-size: 2.3rem;
+  line-height: 1;
+}
+
+.badge-syl-text {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--pink-dark);
+  letter-spacing: 1px;
+}
+
+.badge-huge-target {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #1E40AF;
+}
+
+.badge-huge-math {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #7C3AED;
+}
+
+.visual-cue-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.96rem;
+  font-weight: 900;
+  color: var(--text-dark);
+}
+
+.bouncing-hand-icon {
+  display: inline-block;
+  font-size: 1.8rem;
+  animation: bounce-hand 1.05s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes bounce-hand {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.18);
+  }
+}
+
+@keyframes piece-hop {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.cut-line-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: piece-hop 0.85s infinite ease-in-out;
+}
+
+.floating-item-icon {
+  display: inline-block;
+  animation: piece-hop 1.4s infinite ease-in-out;
+}
+
+/* Sheriff Labrador Patrol Styles */
+.patrol-arrival-banner {
+  background: linear-gradient(180deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 3px solid #3B82F6;
+  border-radius: 18px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+  width: 100%;
+}
+
+.patrol-siren-pill {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #1E3A8A;
+  background: #FFFFFF;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px solid #60A5FA;
+}
+
+.siren-pulse-badge {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #DC2626;
+  animation: pulse-ring 0.8s infinite;
+}
+
+@keyframes siren-flash-red {
+  0%, 100% { opacity: 0.25; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes siren-flash-blue {
+  0%, 100% { opacity: 1; transform: scale(1.2); }
+  50% { opacity: 0.25; transform: scale(0.9); }
+}
+
+.siren-light.red {
+  animation: siren-flash-red 0.5s infinite ease-in-out;
+  transform-origin: 95px 24px;
+}
+
+.siren-light.blue {
+  animation: siren-flash-blue 0.5s infinite ease-in-out;
+  transform-origin: 109px 24px;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.police-badge-award-card {
+  animation: pulse-ring 1.8s infinite ease-in-out;
+}

@@ -280,6 +280,174 @@ window.INARA_SVG = (function () {
   }
 
   /**
+   * Renders Sheriff Labrador (BabyBus Special Guest) Chibi SVG
+   * Cream retriever dog in dark blue police uniform, light blue tie, paw badge, and police cap
+   */
+  function renderSheriffLabrador(mood = "happy", size = 125) {
+    const isEating = mood === "eating";
+    const isCheering = mood === "cheering";
+
+    const mouth = isEating
+      ? `<circle cx="100" cy="116" r="11" fill="#E63946" stroke="#1E293B" stroke-width="3"/>
+         <ellipse cx="100" cy="121" rx="6" ry="4" fill="#FF8FAB"/>`
+      : isCheering
+      ? `<path d="M 86 112 Q 100 128 114 112 Z" fill="#E63946" stroke="#1E293B" stroke-width="3"/>
+         <path d="M 92 118 Q 100 114 108 118" fill="#FF8FAB"/>`
+      : `<path d="M 88 112 Q 94 118 100 113 Q 106 118 112 112" stroke="#1E293B" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+
+    const eyes = isCheering
+      ? `<path d="M 74 94 Q 82 85 90 94" stroke="#1E293B" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+         <path d="M 110 94 Q 118 85 126 94" stroke="#1E293B" stroke-width="4.5" fill="none" stroke-linecap="round"/>`
+      : `<circle cx="82" cy="92" r="7" fill="#1E293B"/>
+         <circle cx="118" cy="92" r="7" fill="#1E293B"/>
+         <circle cx="84.5" cy="89.5" r="2.5" fill="#FFFFFF"/>
+         <circle cx="120.5" cy="89.5" r="2.5" fill="#FFFFFF"/>
+         <circle cx="80" cy="94" r="1.2" fill="#FFFFFF"/>
+         <circle cx="116" cy="94" r="1.2" fill="#FFFFFF"/>`;
+
+    return `
+      <svg class="chibi-svg customer-svg customer-labrador mood-${mood}" width="${size}" height="${size}" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sheriff Labrador">
+        <!-- Blue Police Background Circle -->
+        <circle cx="100" cy="105" r="84" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="4"/>
+
+        <!-- Floppy Retriever Dog Ears (Cream with warm golden tones) -->
+        <path d="M 58 76 Q 40 92 46 126 Q 52 142 66 136 Q 74 128 72 96 Z" fill="#EAB308" stroke="#1E293B" stroke-width="3.5"/>
+        <path d="M 142 76 Q 160 92 154 126 Q 148 142 134 136 Q 126 128 128 96 Z" fill="#EAB308" stroke="#1E293B" stroke-width="3.5"/>
+        <path d="M 50 110 Q 52 130 62 126" stroke="#CA8A04" stroke-width="3" fill="none"/>
+        <path d="M 150 110 Q 148 130 138 126" stroke="#CA8A04" stroke-width="3" fill="none"/>
+
+        <!-- Dark Blue Police Uniform Jacket & Shoulders -->
+        <path d="M 56 184 Q 60 134 100 134 Q 140 134 144 184 Z" fill="#1E3A8A" stroke="#1E293B" stroke-width="3.5"/>
+        <!-- Golden Epaulets on shoulders -->
+        <rect x="52" y="142" width="16" height="8" rx="3" fill="#FBBF24" stroke="#1E293B" stroke-width="2"/>
+        <rect x="132" y="142" width="16" height="8" rx="3" fill="#FBBF24" stroke="#1E293B" stroke-width="2"/>
+
+        <!-- White Shirt Collar & Light Blue Police Tie -->
+        <polygon points="86,134 100,150 114,134" fill="#FFFFFF" stroke="#1E293B" stroke-width="2"/>
+        <polygon points="95,142 105,142 107,172 100,178 93,172" fill="#38BDF8" stroke="#1E293B" stroke-width="2"/>
+
+        <!-- Golden Police Paw Badge on Chest -->
+        <polygon points="126,144 134,148 134,162 126,168 118,162 118,148" fill="#FCD34D" stroke="#D97706" stroke-width="2"/>
+        <!-- Paw Print Icon on Badge -->
+        <circle cx="126" cy="158" r="3" fill="#1E3A8A"/>
+        <circle cx="122.5" cy="152.5" r="1.3" fill="#1E3A8A"/>
+        <circle cx="126" cy="150.5" r="1.3" fill="#1E3A8A"/>
+        <circle cx="129.5" cy="152.5" r="1.3" fill="#1E3A8A"/>
+
+        <!-- Golden Jacket Buttons -->
+        <circle cx="86" cy="162" r="3" fill="#FBBF24"/>
+        <circle cx="86" cy="174" r="3" fill="#FBBF24"/>
+
+        <!-- Friendly Retriever Head (Cream fur) -->
+        <circle cx="100" cy="98" r="42" fill="#FDE68A" stroke="#1E293B" stroke-width="3.5"/>
+
+        <!-- Snout (Lighter cream) & Black Nose -->
+        <ellipse cx="100" cy="108" rx="20" ry="14" fill="#FEF3C7" stroke="#1E293B" stroke-width="2.5"/>
+        <path d="M 92 102 Q 100 99 108 102 Q 104 109 100 110 Q 96 109 92 102 Z" fill="#1E293B"/>
+
+        <!-- Rosy Cheeks -->
+        <ellipse cx="72" cy="106" rx="6.5" ry="4" fill="#F87171" opacity="0.5"/>
+        <ellipse cx="128" cy="106" rx="6.5" ry="4" fill="#F87171" opacity="0.5"/>
+
+        <!-- Eyes & Mouth -->
+        ${eyes}
+        ${mouth}
+
+        <!-- Dark Blue Police Cap with Golden Paw Badge -->
+        <!-- Cap Top / Dome -->
+        <path d="M 64 68 Q 66 38 100 36 Q 134 38 136 68 Z" fill="#1E3A8A" stroke="#1E293B" stroke-width="3.5"/>
+        <!-- Cap Band -->
+        <rect x="66" y="62" width="68" height="12" rx="3" fill="#172554" stroke="#1E293B" stroke-width="2.5"/>
+        <!-- Black Visor -->
+        <path d="M 62 72 Q 100 84 138 72 Q 124 78 100 78 Q 76 78 62 72 Z" fill="#0F172A" stroke="#1E293B" stroke-width="2"/>
+        <!-- Golden Shield Badge on Cap -->
+        <polygon points="100,46 108,52 106,62 100,66 94,62 92,52" fill="#FCD34D" stroke="#D97706" stroke-width="2"/>
+        <!-- Paw Print on Cap Badge -->
+        <circle cx="100" cy="58" r="2.4" fill="#1E3A8A"/>
+        <circle cx="97" cy="53" r="1.1" fill="#1E3A8A"/>
+        <circle cx="100" cy="51.5" r="1.1" fill="#1E3A8A"/>
+        <circle cx="103" cy="53" r="1.1" fill="#1E3A8A"/>
+      </svg>
+    `;
+  }
+
+  /**
+   * Renders Cartoon Police Patrol Car SVG for Sheriff Labrador arrival
+   */
+  function renderPatrolCar(size = 140) {
+    return `
+      <svg class="patrol-car-svg" width="${size}" height="${Math.round(size * 0.65)}" viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mobil Patroli Polisi">
+        <!-- Shadow -->
+        <ellipse cx="100" cy="116" rx="80" ry="8" fill="rgba(0,0,0,0.18)"/>
+
+        <!-- Car Body (White and Navy Blue) -->
+        <path d="M 30 96 L 25 72 Q 30 62 55 60 L 75 42 Q 85 36 125 36 L 148 42 L 175 62 Q 185 68 185 82 L 185 96 Z" fill="#FFFFFF" stroke="#1E293B" stroke-width="4"/>
+        <path d="M 25 74 L 185 74 L 185 96 L 25 96 Z" fill="#1E3A8A"/>
+
+        <!-- Police Text / Star on Door -->
+        <rect x="78" y="77" width="44" height="16" rx="4" fill="#FCD34D"/>
+        <text x="100" y="89" text-anchor="middle" font-size="10" font-weight="900" fill="#1E3A8A" font-family="sans-serif">POLISI</text>
+
+        <!-- Windows (Pastel Sky Blue) -->
+        <polygon points="76,60 102,60 102,42 84,42" fill="#BAE6FD" stroke="#1E293B" stroke-width="2.5"/>
+        <polygon points="108,60 142,60 138,42 108,42" fill="#BAE6FD" stroke="#1E293B" stroke-width="2.5"/>
+
+        <!-- Cute Retriever Driver Silhouette -->
+        <circle cx="92" cy="52" r="7" fill="#FDE68A"/>
+        <circle cx="90" cy="48" r="3" fill="#1E3A8A"/>
+
+        <!-- Flashing Police Siren Lights (Red & Blue with Pulsing Glow) -->
+        <rect x="94" y="28" width="16" height="8" rx="3" fill="#334155" stroke="#1E293B" stroke-width="2"/>
+        <circle class="siren-light red" cx="95" cy="24" r="7" fill="#EF4444"/>
+        <circle class="siren-light blue" cx="109" cy="24" r="7" fill="#3B82F6"/>
+
+        <!-- Headlights -->
+        <circle cx="180" cy="74" r="5" fill="#FEF08A" stroke="#1E293B" stroke-width="2"/>
+        <circle cx="28" cy="74" r="4" fill="#F87171" stroke="#1E293B" stroke-width="1.5"/>
+
+        <!-- Wheels (Black tires with Golden Rims) -->
+        <circle cx="56" cy="100" r="18" fill="#1E293B"/>
+        <circle cx="56" cy="100" r="9" fill="#FCD34D" stroke="#FFFFFF" stroke-width="2"/>
+        <circle cx="150" cy="100" r="18" fill="#1E293B"/>
+        <circle cx="150" cy="100" r="9" fill="#FCD34D" stroke="#FFFFFF" stroke-width="2"/>
+      </svg>
+    `;
+  }
+
+  /**
+   * Renders Golden Police Patrol Badge Award SVG
+   */
+  function renderPoliceBadge(size = 110) {
+    return `
+      <svg class="police-badge-svg" width="${size}" height="${size}" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lencana Patroli Polisi">
+        <defs>
+          <radialGradient id="badgeGold" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#FEF08A"/>
+            <stop offset="60%" stop-color="#F59E0B"/>
+            <stop offset="100%" stop-color="#B45309"/>
+          </radialGradient>
+        </defs>
+        <!-- Shield Backdrop -->
+        <path d="M 80 14 L 138 32 C 138 88 120 126 80 148 C 40 126 22 88 22 32 Z" fill="url(#badgeGold)" stroke="#78350F" stroke-width="5"/>
+        <path d="M 80 22 L 130 38 C 130 84 114 118 80 138 C 46 118 30 84 30 38 Z" fill="#1E3A8A" stroke="#FDE68A" stroke-width="3"/>
+
+        <!-- Center Golden Star -->
+        <polygon points="80,42 86,58 104,58 90,68 95,86 80,74 65,86 70,68 56,58 74,58" fill="#FDE68A" stroke="#D97706" stroke-width="2.5"/>
+
+        <!-- Paw Print in center of Star -->
+        <circle cx="80" cy="70" r="4.5" fill="#1E3A8A"/>
+        <circle cx="74" cy="62" r="2" fill="#1E3A8A"/>
+        <circle cx="80" cy="59" r="2" fill="#1E3A8A"/>
+        <circle cx="86" cy="62" r="2" fill="#1E3A8A"/>
+
+        <!-- Ribbon Banner at Bottom -->
+        <path d="M 40 102 L 120 102 L 112 120 L 80 114 L 48 120 Z" fill="#FBBF24" stroke="#78350F" stroke-width="2.5"/>
+        <text x="80" y="112" text-anchor="middle" font-size="9" font-weight="900" fill="#78350F" font-family="sans-serif">PATROLI</text>
+      </svg>
+    `;
+  }
+
+  /**
    * Renders a woven Tens Basket (Keranjang Puluhan = 10 items)
    */
   function renderTensBasket(emoji = "🍓") {
@@ -298,7 +466,15 @@ window.INARA_SVG = (function () {
 
   return {
     renderChefInara,
-    renderCustomer,
+    renderCustomer: function (customerId = "abi", mood = "happy", size = 125) {
+      if (customerId === "labrador") {
+        return renderSheriffLabrador(mood, size);
+      }
+      return renderCustomer(customerId, mood, size);
+    },
+    renderSheriffLabrador,
+    renderPatrolCar,
+    renderPoliceBadge,
     renderTensBasket
   };
 })();
