@@ -4,32 +4,488 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#FF6F91" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Dapur Inara" />
-  <meta name="description" content="Dapur Ceria Inara — Game Edukasi Memasak Interaktif: Membaca Suku Kata (BA-CA), Huruf A-Z, Angka 1-100, serta Tambah (+) & Kurang (-) bersama Abi & Umi!" />
+  <title>Dapur Inara — Step 1</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
 
-  <title>Dapur Ceria Inara — Masak & Belajar 1–100</title>
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #FFF4E6 0%, #FFE3E8 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Comic Sans MS", "Chalkboard SE", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+    }
 
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="./css/styles.css" />
+    /* TOP BAR: Buddy Badge & Reset */
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .buddy-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 8px 18px;
+      border-radius: 40px;
+      box-shadow: 0 4px 16px rgba(255, 111, 145, 0.2);
+      border: 3px solid #FFE0E6;
+    }
+
+    .buddy-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #EBF4FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      border: 2px solid #4D96FF;
+    }
+
+    .buddy-name {
+      font-size: 16px;
+      font-weight: 900;
+      color: #2D3748;
+    }
+
+    .buddy-sub {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .reset-btn {
+      background: white;
+      border: 3px solid #E2E8F0;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .reset-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* CENTER STAGE: WAJAN BESAR */
+    main {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pan {
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle at 35% 35%, #4A5568 0%, #1A202C 100%);
+      border: 14px solid #718096;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 6px 16px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .pan-handle {
+      position: absolute;
+      right: -90px;
+      width: 100px;
+      height: 32px;
+      background: #2D3748;
+      border: 4px solid #718096;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      z-index: -1;
+    }
+
+    .pan.shake {
+      animation: panSizzle 0.5s infinite;
+    }
+
+    @keyframes panSizzle {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-3px, 2px) rotate(-1deg); }
+      75% { transform: translate(3px, -2px) rotate(1deg); }
+    }
+
+    /* BAHAN DI DALAM WAJAN */
+    .cooked-items-container {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cooked-item {
+      position: absolute;
+      font-size: 72px;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+      70% { transform: scale(1.25) rotate(10deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    /* ANIMASI ISYARAT TANGAN (👆) */
+    .finger-guide {
+      position: absolute;
+      font-size: 54px;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));
+      animation: fingerTap 1.2s infinite ease-in-out;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes fingerTap {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-16px) scale(1.15); }
+    }
+
+    /* BOTTOM BAR: 3 BAHAN RAKSASA */
+    footer {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding-bottom: 8px;
+    }
+
+    .ingredient-card {
+      width: 110px;
+      height: 110px;
+      background: white;
+      border: 4px solid #FFE4E8;
+      border-radius: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 54px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(255, 111, 145, 0.2);
+      transition: transform 0.15s, border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .ingredient-card:active {
+      transform: scale(0.9);
+      background: #FFF0F3;
+      border-color: #FF6F91;
+    }
+
+    .ingredient-card.used {
+      opacity: 0.35;
+      filter: grayscale(80%);
+      pointer-events: none;
+      border-color: #E2E8F0;
+    }
+
+    .badge-number {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 32px;
+      height: 32px;
+      background: #FF6F91;
+      color: white;
+      font-size: 16px;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(255,111,145,0.4);
+      border: 2px solid white;
+    }
+
+    /* BANNER SELESAI */
+    .finish-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .finish-card {
+      background: white;
+      border: 6px solid #FFD166;
+      border-radius: 36px;
+      padding: 32px;
+      text-align: center;
+      max-width: 440px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      animation: popFinish 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popFinish {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .finish-hero {
+      font-size: 90px;
+      margin-bottom: 12px;
+      animation: bounceHero 1s infinite alternate;
+    }
+
+    @keyframes bounceHero {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-14px); }
+    }
+
+    .eat-btn {
+      margin-top: 20px;
+      padding: 16px 36px;
+      font-size: 22px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FF6F91, #FF9671);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 111, 145, 0.4);
+    }
+    .eat-btn:active {
+      transform: scale(0.95);
+    }
+  </style>
 </head>
 <body>
-  <div id="app" role="application" aria-label="Dapur Ceria Inara"></div>
 
-  <script src="./js/data.js"></script>
-  <script src="./js/svg-assets.js"></script>
-  <script src="./js/audio.js"></script>
-  <script src="./js/app.js"></script>
+  <!-- TOP BAR -->
+  <header>
+    <div class="buddy-badge">
+      <div class="buddy-avatar">🐕</div>
+      <div>
+        <div class="buddy-name">Sheriff Labrador</div>
+        <div class="buddy-sub">Teman Koki Inara</div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetGame()" title="Ulangi Masak">🔄</button>
+  </header>
+
+  <!-- CENTER WAJAN -->
+  <main>
+    <div class="pan" id="pan" onclick="onPanTap()">
+      <div class="pan-handle"></div>
+      <div class="cooked-items-container" id="cookedItems"></div>
+      <div class="finger-guide" id="fingerGuide" style="bottom: 20px; right: 20px;">👆</div>
+    </div>
+  </main>
+
+  <!-- BOTTOM 3 BAHAN JUMBO -->
+  <footer>
+    <div class="ingredient-card" id="btn-telur" onclick="addIngredient('telur')">
+      <div class="badge-number">1</div>
+      <span>🍳</span>
+    </div>
+    <div class="ingredient-card" id="btn-keju" onclick="addIngredient('keju')">
+      <div class="badge-number">2</div>
+      <span>🧀</span>
+    </div>
+    <div class="ingredient-card" id="btn-tomat" onclick="addIngredient('tomat')">
+      <div class="badge-number">3</div>
+      <span>🍅</span>
+    </div>
+  </footer>
+
+  <!-- FINISH DIALOG -->
+  <div class="finish-overlay" id="finishOverlay">
+    <div class="finish-card">
+      <div class="finish-hero">🐕🍲✨</div>
+      <h2 style="color: #FF6F91; font-size: 26px; margin-bottom: 8px;">Masakan Inara Matang!</h2>
+      <p style="color: #718096; font-size: 16px;">Sheriff Labrador siap mencicipi!</p>
+      <button class="eat-btn" onclick="feedLabrador()">Nyam! Suapi Polisi 😋</button>
+    </div>
+  </div>
+
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
-      });
+    // AUDIO ENGINE DENGAN SOUND EFFECTS SYNTHESIZER
+    const audioClips = {
+      start: new Audio("assets/audio/start.mp3"),
+      telur: new Audio("assets/audio/tap_telur.mp3"),
+      keju: new Audio("assets/audio/tap_keju.mp3"),
+      tomat: new Audio("assets/audio/tap_tomat.mp3"),
+      selesai: new Audio("assets/audio/selesai.mp3"),
+      nyam: new Audio("assets/audio/nyam.mp3")
+    };
+
+    let audioContext = null;
+    function playSfxPop() {
+      try {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === "suspended") audioContext.resume();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(350, audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(750, audioContext.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.12);
+      } catch(e) {}
     }
+
+    function playVoice(key) {
+      Object.values(audioClips).forEach(a => {
+        a.pause();
+        a.currentTime = 0;
+      });
+      audioClips[key].play().catch(() => {});
+    }
+
+    // STATE PERMAINAN STEP 1
+    const cookedList = [];
+    const itemPositions = [
+      { emoji: "🍳", x: -40, y: -20 },
+      { emoji: "🧀", x: 40, y: -20 },
+      { emoji: "🍅", x: 0, y: 35 }
+    ];
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // Mulai saat ada sentuhan pertama
+      document.body.addEventListener("click", () => {
+        if (cookedList.length === 0 && !window.hasStarted) {
+          window.hasStarted = true;
+          playVoice("start");
+        }
+      }, { once: true });
+      updateFingerHint();
+    });
+
+    function updateFingerHint() {
+      const guide = document.getElementById("fingerGuide");
+      if (cookedList.length === 0) {
+        // Tunjuk bahan telur
+        const target = document.getElementById("btn-telur");
+        positionFingerAt(target);
+      } else if (cookedList.length === 1) {
+        const target = document.getElementById("btn-keju");
+        positionFingerAt(target);
+      } else if (cookedList.length === 2) {
+        const target = document.getElementById("btn-tomat");
+        positionFingerAt(target);
+      } else {
+        guide.style.display = "none";
+      }
+    }
+
+    function positionFingerAt(el) {
+      const guide = document.getElementById("fingerGuide");
+      guide.style.display = "block";
+      const rect = el.getBoundingClientRect();
+      guide.style.top = (rect.top - 50) + "px";
+      guide.style.left = (rect.left + rect.width / 2 - 25) + "px";
+      guide.style.position = "fixed";
+    }
+
+    function addIngredient(type) {
+      if (cookedList.includes(type)) return;
+
+      playSfxPop();
+      cookedList.push(type);
+
+      // Disable card
+      document.getElementById("btn-" + type).classList.add("used");
+
+      // Goyangkan wajan
+      const pan = document.getElementById("pan");
+      pan.classList.add("shake");
+      setTimeout(() => pan.classList.remove("shake"), 500);
+
+      // Tambahkan item ke wajan
+      const container = document.getElementById("cookedItems");
+      const pos = itemPositions[cookedList.length - 1];
+      const el = document.createElement("div");
+      el.className = "cooked-item";
+      el.textContent = pos.emoji;
+      el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+      container.appendChild(el);
+
+      // Suara Sheriff Labrador
+      playVoice(type);
+      updateFingerHint();
+
+      // Jika 3 bahan sudah masuk semua
+      if (cookedList.length === 3) {
+        setTimeout(() => {
+          playVoice("selesai");
+          document.getElementById("finishOverlay").style.display = "flex";
+        }, 1800);
+      }
+    }
+
+    function onPanTap() {
+      playSfxPop();
+      const pan = document.getElementById("pan");
+      pan.classList.add("shake");
+      setTimeout(() => pan.classList.remove("shake"), 300);
+    }
+
+    function feedLabrador() {
+      playVoice("nyam");
+      document.querySelector(".finish-hero").textContent = "🐕❤️😋";
+      setTimeout(() => {
+        resetGame();
+      }, 2500);
+    }
+
+    function resetGame() {
+      cookedList.length = 0;
+      document.getElementById("cookedItems").innerHTML = "";
+      document.querySelectorAll(".ingredient-card").forEach(c => c.classList.remove("used"));
+      document.getElementById("finishOverlay").style.display = "none";
+      document.querySelector(".finish-hero").textContent = "🐕🍲✨";
+      updateFingerHint();
+      playVoice("start");
+    }
+
+    window.addEventListener("resize", updateFingerHint);
   </script>
 </body>
 </html>
