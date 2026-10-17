@@ -1,0 +1,53 @@
+{
+  "name": "Dapur Ceria Inara — Masak & Belajar 1-100",
+  "short_name": "Dapur Inara",
+  "description": "Game edukasi memasak interaktif untuk Koki Inara: Membaca Suku Kata (BA-CA), Mengenal Huruf A-Z, Angka 1-100, serta Tambah (+) & Kurang (-) bersama Abi & Umi!",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#FFF6EC",
+  "theme_color": "#FF6F91",
+  "lang": "id-ID",
+  "categories": ["education", "games", "kids"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Peta 5 Kedai Masakan",
+      "short_name": "5 Kedai",
+      "url": "./index.html#map",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Papan Angka 1-100",
+      "short_name": "Angka 1-100",
+      "url": "./index.html#numbers100",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mesin Hitung Kue (+/-)",
+      "short_name": "Hitung +/-",
+      "url": "./index.html#mathlab",
+      "icons": [{ "src": "./assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
